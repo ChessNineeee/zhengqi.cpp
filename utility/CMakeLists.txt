@@ -6,7 +6,8 @@ set(base_SRCS
         CurrentThread.cpp
         Timestamp.cpp
         ThreadPool.cpp
-        )
+        LogStream.cpp
+)
 
 add_library(zhengqi_utility ${base_SRCS})
 target_link_libraries(zhengqi_utility pthread)
