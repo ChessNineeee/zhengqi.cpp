@@ -27,6 +27,8 @@ namespace zhengqi {
         static_assert(sizeof digitsHex == 17, "wrong number of digitsHex");
 
         // Efficient Integer to String Conversions, by Matthew Wilson.
+        // 由十进制逐位转换为char类型，然后填入缓存，直到待转数值为0
+        // 转换的结果为十进制表示
         template<typename T>
         size_t convert(char buf[], T value)
         {
@@ -203,10 +205,122 @@ void zhengqi::utility::FixedBuffer<SIZE>::cookieEnd()
 {
 }
 
+/// kMaxNumericSize 字段的含义？
 void zhengqi::utility::LogStream::staticCheck()
 {
-    
+    static_assert(kMaxNumericSize - 10 > std::numeric_limits<double>::digits10,
+            "kMaxNumericSize is large enough");
+    static_assert(kMaxNumericSize - 10 > std::numeric_limits<long double>::digits10,
+                  "kMaxNumericSize is large enough");
+    static_assert(kMaxNumericSize - 10 > std::numeric_limits<long>::digits10,
+                  "kMaxNumericSize is large enough");
+    static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
+                  "kMaxNumericSize is large enough");
 }
 
+template<typename T>
+void zhengqi::utility::LogStream::formatInteger(T v)
+{
+    if (buffer_.avail() >= kMaxNumericSize)
+    {
+        size_t len = convert(buffer_.current(), v);
+        buffer_.add(len);
+    }
+}
 
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(short v)
+{
+    *this << static_cast<int>(v);
+    return *this;
+}
 
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(unsigned short v)
+{
+    *this << static_cast<unsigned int>(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(int v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(unsigned int v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(long v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(unsigned long v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(long long v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(unsigned long long v)
+{
+    formatInteger(v);
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(const void* p)
+{
+    uintptr_t v = reinterpret_cast<uintptr_t>(p);
+    if (buffer_.avail() >= kMaxNumericSize)
+    {
+        char *buf = buffer_.current();
+        buf[0] = '0';
+        buf[1] = 'x';
+        size_t len = convertHex(buf+2, v);
+        buffer_.add(len + 2);
+    }
+    return *this;
+}
+
+zhengqi::utility::LogStream& zhengqi::utility::LogStream::operator<<(double v)
+{
+    if (buffer_.avail() >= kMaxNumericSize)
+    {
+        // 最多保留浮点数的12位小数
+        int len = snprintf(buffer_.current(), kMaxNumericSize, "%.12g", v);
+        buffer_.add(len);
+    }
+    return *this;
+}
+
+template<typename T>
+zhengqi::utility::Fmt::Fmt(const char* fmt, T val)
+{
+    static_assert(std::is_arithmetic<T>::value == true, "Must be arithmetic type");
+
+    length_ = snprintf(buf_, sizeof buf_, fmt, val);
+    assert(static_cast<size_t>(length_) < sizeof buf_);
+}
+
+// Explicit instantiations 模板实例化
+// 不能对没有定义的模板函数声明进行实例化
+template zhengqi::utility::Fmt::Fmt(const char* fmt, char);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, short);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, unsigned short);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, int);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, unsigned int);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, long);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, unsigned long);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, long long);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, unsigned long long);
+
+template zhengqi::utility::Fmt::Fmt(const char* fmt, float);
+template zhengqi::utility::Fmt::Fmt(const char* fmt, double);

@@ -13,8 +13,8 @@
 
 namespace zhengqi {
     namespace utility {
-        const int kSmallBuffer = 4000; // 4KB
-        const int kLargeBuffer = 4000 * 1000; //4MB
+        const int kSmallBuffer = 4000; // 4KB，为前端类所持有，用于存放一条日志信息
+        const int kLargeBuffer = 4000 * 1000; //4MB，为AsyncLogging类所持有，用于存放多条日志信息
 
         template<int SIZE>
         class FixedBuffer : noncopyable
@@ -44,6 +44,7 @@ namespace zhengqi {
             int length() const { return static_cast<int>(cur_ - data_); }
 
             char* current() { return cur_; }
+            // 返回 Buffer 剩余可用空间大小
             int avail() const { return static_cast<int>(end() - cur_); }
             void add(size_t len) { cur_ += len; }
 
@@ -52,7 +53,7 @@ namespace zhengqi {
 
             const char* debugString();
             void setCookie(void (*cookie)()) { cookie_ = cookie; }
-            // for used by unit test
+            // for used by unit boost_test
             string toString() const { return string(data_, length()); }
             StringPiece toStringPiece() const { return StringPiece(data_, length()); }
 
@@ -63,8 +64,8 @@ namespace zhengqi {
             static void cookieEnd();
 
             void (*cookie_)();
-            char data_[SIZE];
-            char* cur_;
+            char data_[SIZE]; // 存储日志数据
+            char* cur_; // 当前待写数据的位置
         };
 
         /// @brief  主要重载operator<<操作
@@ -177,6 +178,7 @@ namespace zhengqi {
             char buf_[32];
             int length_;
         };
+
 
         inline LogStream& operator<<(LogStream& s, const Fmt& fmt)
         {

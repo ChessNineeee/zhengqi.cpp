@@ -92,7 +92,7 @@ namespace zhengqi
 // when you downcast, you should use this macro.  In debug mode, we
 // use dynamic_cast<> to double-check the downcast is legal (we die
 // if it's not).  In normal mode, we do the efficient static_cast<>
-// instead.  Thus, it's important to test in debug mode to make sure
+// instead.  Thus, it's important to boost_test in debug mode to make sure
 // the cast is legal!
 //    This is the only place in the code we should use dynamic_cast<>.
 // In particular, you SHOULDN'T be using dynamic_cast<> in order to
@@ -104,7 +104,7 @@ namespace zhengqi
         template<typename To, typename From>     // use like this: down_cast<T*>(foo);
         inline To down_cast(From* f)                     // so we only accept pointers
         {
-            // Ensures that To is a sub-type of From *.  This test is here only
+            // Ensures that To is a sub-type of From *.  This boost_test is here only
             // for compile-time type checking, and has no overhead in an
             // optimized build at run-time, as it will be optimized away
             // completely.
