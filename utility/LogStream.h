@@ -67,6 +67,9 @@ namespace zhengqi {
             char* cur_;
         };
 
+        /// @brief  主要重载operator<<操作
+        /// 将用户提供的整型数、浮点数、字符、字符串、字符数组、二进制内存、另一个Small Buffer，格式化为字符串，
+        /// 并加入当前类的Small Buffer。
         class LogStream : noncopyable
         {
             typedef LogStream self;

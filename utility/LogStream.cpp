@@ -11,6 +11,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wtautological-compare"
+#else
+#pragma GCC diagnostic ignored "-Wtype-limits"
+#endif
+
 namespace zhengqi {
     namespace utility {
         const char digits[] = "9876543210123456789";
@@ -64,6 +70,7 @@ namespace zhengqi {
 
         template class FixedBuffer<kSmallBuffer>;
         template class FixedBuffer<kLargeBuffer>;
+        
         /*
          Format a number with 5 characters, including SI units.
          [0,     999]
@@ -178,3 +185,28 @@ namespace zhengqi {
         }
     } // zhengqi
 } // utility
+
+template<int SIZE>
+const char* zhengqi::utility::FixedBuffer<SIZE>::debugString()
+{
+    *cur_ = '\0';
+    return data_;
+}
+
+template<int SIZE>
+void zhengqi::utility::FixedBuffer<SIZE>::cookieStart()
+{
+}
+
+template<int SIZE>
+void zhengqi::utility::FixedBuffer<SIZE>::cookieEnd()
+{
+}
+
+void zhengqi::utility::LogStream::staticCheck()
+{
+    
+}
+
+
+
