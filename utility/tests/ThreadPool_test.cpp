@@ -6,3 +6,14 @@
 #include "utility/CountDownLatch.h"
 #include "utility/CurrentThread.h"
 
+void print()
+{
+    printf("tid=%d\n", zhengqi::utility::CurrentThread::tid());
+}
+
+
+
+int main()
+{
+
+}
