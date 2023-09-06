@@ -2,3 +2,5 @@
 cmake-build-debug/
 .vscode/
 build/
+.cache/
+.clangd
