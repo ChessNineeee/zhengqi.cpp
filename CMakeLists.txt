@@ -3,7 +3,7 @@ project(zhengqi.cpp)
 
 set(CMAKE_CXX_STANDARD 11)
 enable_testing()
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CXX_FLAGS
         -g
         # -DVALGRIND

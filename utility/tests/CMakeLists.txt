@@ -1,3 +1,4 @@
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 add_executable(mutex_test Mutex_test.cpp)
 target_link_libraries(mutex_test zhengqi_utility)
 add_executable(singleton_test Singleton_test.cpp)
