@@ -4,3 +4,4 @@ cmake-build-debug/
 build/
 .cache/
 .clangd
+compile_commands.json
