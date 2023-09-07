@@ -7,6 +7,7 @@ set(base_SRCS
         Timestamp.cpp
         ThreadPool.cpp
         LogStream.cpp
+        Date.cpp
 )
 
 add_library(zhengqi_utility ${base_SRCS})
