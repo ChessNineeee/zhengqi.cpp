@@ -9,6 +9,7 @@ set(base_SRCS
         LogStream.cpp
         Date.cpp
         TimeZone.cpp
+        Logging.cpp
 )
 
 add_library(zhengqi_utility ${base_SRCS})
