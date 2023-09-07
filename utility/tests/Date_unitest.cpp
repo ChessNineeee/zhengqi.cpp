@@ -36,7 +36,7 @@ void passByValue(zhengqi::utility::Date x) {
 }
 
 int main() {
-    time_t now(NULL);
+    time_t now = time(NULL);
     struct tm t1 = *gmtime(&now);
     struct tm t2 = *localtime(&now);
     zhengqi::utility::Date someDay(2023, 9, 7);

@@ -41,7 +41,7 @@ struct TimeZone::Data {
         localtimes_.push_back(LocalTime(utcOffset, isDst, desigIdx));
     }
 
-    void addTransition(int64_t utcTime, int64_t localtimeIdx) {
+    void addTransition(int64_t utcTime, int localtimeIdx) {
         LocalTime lt = localtimes_.at(localtimeIdx);
         transitions_.push_back(
                 Transition(utcTime, utcTime + lt.utcOffset, localtimeIdx));

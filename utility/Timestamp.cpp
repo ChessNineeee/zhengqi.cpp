@@ -10,6 +10,9 @@
 #define __STDC_FORMAT_MACROS
 #endif
 
+#include <inttypes.h>
+
+
 using namespace zhengqi::utility;
 
 string Timestamp::toString() const
@@ -18,7 +21,7 @@ string Timestamp::toString() const
     int64_t seconds = microSecondsSinceEpoch_ / kMicroSecondsPerSecond;
     int64_t microseconds = microSecondsSinceEpoch_ % kMicroSecondsPerSecond;
     // PRId64 ===> "ll" "d"
-    snprintf(buf, sizeof(buf), "%" "ll" "d" ".%06" "ll" "d" "" , seconds, microseconds);
+    snprintf(buf, sizeof(buf), "%" PRId64 ".%06" PRId64 "" , seconds, microseconds);
     return buf;
 }
 

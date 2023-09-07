@@ -11,6 +11,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
+#include <inttypes.h>
+
+
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wtautological-compare"
 #else
@@ -88,7 +95,7 @@ namespace zhengqi {
             double n = static_cast<double>(s);
             char buf[64];
             if (s < 1000)
-                snprintf(buf, sizeof(buf), "%d", s);
+                snprintf(buf, sizeof(buf), "%" PRId64, s);
             else if (s < 9995)
                 snprintf(buf, sizeof(buf), "%.2fk", n/1e3);
             else if (s < 99950)
@@ -143,7 +150,7 @@ namespace zhengqi {
             const double Ei = Pi * 1024.0;
 
             if (n < Ki)
-                snprintf(buf, sizeof buf, "%d", s);
+                snprintf(buf, sizeof buf, "%" PRId64, s);
             else if (n < Ki*9.995)
                 snprintf(buf, sizeof buf, "%.2fKi", n / Ki);
             else if (n < Ki*99.95)

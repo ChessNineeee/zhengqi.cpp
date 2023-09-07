@@ -53,6 +53,11 @@ int main() {
   benchPrintf<int>("%d");
 
   puts("int");
+    benchPrintf<int>("%d");
+    benchStringStream<int>();
+    benchLogStream<int>();
+
+    puts("double");
   benchPrintf<double>("%.12g");
   benchStringStream<double>();
   benchLogStream<double>();
