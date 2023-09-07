@@ -99,28 +99,36 @@ inline Logger::LogLevel Logger::logLevel() { return g_logLevel; }
 //     logWarnStream << "Bad news";
 //
 #define LOG_TRACE                                                              \
-  if (zhengqi::utility::logLevel() <= zhengqi::utility::Logger::TRACE)         \
-  zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::TRACE,        \
-                           __func__)                                           \
+  if (zhengqi::utility::Logger::logLevel() <= zhengqi::utility::Logger::TRACE) \
+  zhengqi::utility::Logger(__FILE__, __LINE__,                                 \
+                           zhengqi::utility::Logger::TRACE, __func__)          \
       .stream()
 
 #define LOG_DEBUG                                                              \
-  if (zhengqi::utility::logLevel() <= zhengqi::utility::Logger::DEBUG)         \
-  zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::DEBUG,        \
-                           __func__)                                           \
+  if (zhengqi::utility::Logger::logLevel() <= zhengqi::utility::Logger::DEBUG) \
+  zhengqi::utility::Logger(__FILE__, __LINE__,                                 \
+                           zhengqi::utility::Logger::DEBUG, __func__)          \
       .stream()
 
 #define LOG_INFO                                                               \
-  if (zhengqi::utility::logLevel() <= zhengqi::utility::Logger::INFO)          \
-  zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::INFO,         \
-                           __func__)                                           \
+  if (zhengqi::utility::Logger::logLevel() <= zhengqi::utility::Logger::INFO)  \
+  zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::Logger::INFO)                                           \
       .stream()
 
-#define LOG_WARN zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::WARN, __func__).stream()__FILE)
+#define LOG_WARN                                                               \
+  zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::Logger::WARN \
+                           )                                           \
+      .stream()
 
-#define LOG_ERROR zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::ERROR, __func__).stream()__FILE)
+#define LOG_ERROR                                                              \
+  zhengqi::utility::Logger(__FILE__, __LINE__,                                 \
+                           zhengqi::utility::Logger::ERROR)          \
+      .stream()
 
-#define LOG_FATAL zhengqi::utility::Logger(__FILE__, __LINE__, zhengqi::utility::FATAL, __func__).stream()__FILE)
+#define LOG_FATAL                                                              \
+  zhengqi::utility::Logger(__FILE__, __LINE__,                                 \
+                           zhengqi::utility::Logger::FATAL)          \
+      .stream()
 
 #define LOG_SYSERR zhengqi::utility::Logger(__FILE__, __LINE__, false).stream()
 

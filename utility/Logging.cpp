@@ -113,18 +113,18 @@ void Logger::Impl::formatTime() {
   }
 
   if (g_logTimeZone.valid()) {
-    Fmt us(".%06d", microseconds);
+    Fmt us(".%06d ", microseconds);
     assert(us.length() == 8);
     stream_ << T(t_time, 17) << T(us.data(), 8);
   } else {
-    Fmt us(".%06dZ", microseconds);
+    Fmt us(".%06dZ ", microseconds);
     assert(us.length() == 9);
     stream_ << T(t_time, 17) << T(us.data(), 9);
   }
 }
 
 void Logger::Impl::finish() {
-  stream_ << "-" << basename_ << ':' << line_ << '\n';
+  stream_ << " - " << basename_ << ':' << line_ << '\n';
 }
 
 Logger::Logger(SourceFile file, int line) : impl_(INFO, 0, file, line) {}

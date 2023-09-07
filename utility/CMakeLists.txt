@@ -10,6 +10,9 @@ set(base_SRCS
         Date.cpp
         TimeZone.cpp
         Logging.cpp
+        LogFile.cpp
+        ProcessInfo.cpp
+        FileUtil.cpp
 )
 
 add_library(zhengqi_utility ${base_SRCS})
