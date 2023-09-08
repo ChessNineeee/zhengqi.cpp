@@ -16,6 +16,11 @@ namespace zhengqi {
         const int kSmallBuffer = 4000; // 4KB，为前端类所持有，用于存放一条日志信息
         const int kLargeBuffer = 4000 * 1000; //4MB，为AsyncLogging类所持有，用于存放多条日志信息
 
+        /// 一条日志信息对应一个FixedBuffer<kSmallBuffer>
+        /// FixedBuffer<kSmallBuffer> 对象 内存布局
+        /// cookieStart 可以在coredump文件中找到该标识，表示该Buffer对应的日志信息还没来得及刷盘
+        /// data_
+        /// cur_
         template<int SIZE>
         class FixedBuffer : noncopyable {
         public:
