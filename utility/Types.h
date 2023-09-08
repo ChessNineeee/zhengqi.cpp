@@ -79,7 +79,7 @@ namespace zhengqi {
 // its way into the language in the future.
         template<typename To, typename From>
         inline To implicit_cast(From const &f) {
-            return (unsigned long) f;
+            return f;
         }
 
 // When you upcast (that is, cast a pointer from type Foo to type

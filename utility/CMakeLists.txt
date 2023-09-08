@@ -13,6 +13,7 @@ set(base_SRCS
         LogFile.cpp
         ProcessInfo.cpp
         FileUtil.cpp
+        AsyncLogging.cpp
 )
 
 add_library(zhengqi_utility ${base_SRCS})
