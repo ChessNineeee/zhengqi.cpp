@@ -188,12 +188,12 @@ public:
   static size_t new_bigview_count();
   static size_t block_count_hit_tls_threshold();
 
-  bool equals(const StringPiece &) const;
+  bool equals(const zhengqi::utility::StringPiece &) const;
   bool equals(const IOBuf &other) const;
 
   size_t backing_block_num() const { return _ref_num(); }
 
-  StringPiece backing_block(size_t i) const;
+  zhengqi::utility::StringPiece backing_block(size_t i) const;
 
   Movable movable() { return Movable(*this); }
 

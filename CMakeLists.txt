@@ -50,7 +50,7 @@ string(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
 message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
 
 add_subdirectory(utility)
+add_subdirectory(networking)
 add_subdirectory(contrib)
 add_subdirectory(brpc)
-add_subdirectory(networking)
 add_subdirectory(abseil-cpp)
