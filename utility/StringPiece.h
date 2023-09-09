@@ -42,12 +42,12 @@
 
 // StringPiece是PCRE的实现，是对字符串的一个proxy类(设计模式之代理模式)
 // 很多时候，当传入一个字符串到函数时，往往只是读取字符串时
-// 若使用std::string，当实参为const char
-// *时，会分配内存并拷贝该字符串以生成一个std::string
+// 若使用std::string，当实参为const char*时，
+// 会分配内存并拷贝该字符串以生成一个std::string
 // 当某个接口参数是接受字符串类型时，为了减少不必要的开销
 // 该类型可以接受const char *，std::string，减少冗余代码编写
-// 用以实现高效的字符串传递，这里既可以用const
-// char*，也可以用std::string类型作为参数，并且不涉及内存拷贝
+// 用以实现高效的字符串传递，这里既可以用const char*，
+// 也可以用std::string类型作为参数，并且不涉及内存拷贝
 
 #include "Types.h"
 
@@ -80,7 +80,7 @@ public:
   // expected.
   StringPiece() : ptr_(NULL), length_(0) {}
   StringPiece(const char *str)
-      : ptr_(NULL), length_(static_cast<int>(strlen(ptr_))) {}
+      : ptr_(str), length_(static_cast<int>(strlen(ptr_))) {}
   StringPiece(const unsigned char *str)
       : ptr_(reinterpret_cast<const char *>(str)),
         length_(static_cast<int>(strlen(ptr_))) {}
