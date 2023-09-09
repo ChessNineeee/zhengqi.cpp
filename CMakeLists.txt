@@ -52,3 +52,4 @@ message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_T
 add_subdirectory(utility)
 add_subdirectory(contrib)
 add_subdirectory(brpc)
+add_subdirectory(abseil-cpp)
