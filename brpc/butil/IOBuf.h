@@ -10,6 +10,9 @@
 #include <sys/types.h>
 #include <sys/uio.h> // iovec
 
+#include "brpc/butil/Reader_Writer.h"
+#include "utility/StringPiece.h" // PCRE StringPiece Implementation
+
 extern "C" {
 struct const_iovec {
   const void *iov_base;
