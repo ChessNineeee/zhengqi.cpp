@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(zhengqi.cpp)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 enable_testing()
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CXX_FLAGS
@@ -51,3 +51,4 @@ message(STATUS "CXX_FLAGS = " ${CMAKE_CXX_FLAGS} " " ${CMAKE_CXX_FLAGS_${BUILD_T
 
 add_subdirectory(utility)
 add_subdirectory(contrib)
+add_subdirectory(brpc)
