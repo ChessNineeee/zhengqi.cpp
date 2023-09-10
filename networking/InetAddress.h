@@ -34,6 +34,8 @@ public:
     return sockets::sockaddr_cast(&addr6_);
   }
 
+  void setSockAddrInet6(const struct sockaddr_in6 &addr6) { addr6_ = addr6; }
+
   uint32_t ipv4NetEndian() const;
   uint16_t portNetEndian() const;
 

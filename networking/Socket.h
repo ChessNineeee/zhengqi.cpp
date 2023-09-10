@@ -1,6 +1,7 @@
 #ifndef ZHENGQI_CPP_NETWORKING_SOCKET_H
 #define ZHENGQI_CPP_NETWORKING_SOCKET_H
 
+#include "networking/InetAddress.h"
 #include "utility/noncopyable.h"
 
 struct tcp_info;
