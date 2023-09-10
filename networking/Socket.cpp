@@ -42,7 +42,7 @@ void Socket::bindAddress(const InetAddress &addr) {}
 
 void Socket::listen() {}
 
-int Socket::accept(const InetAddress &addr) {}
+int Socket::accept(InetAddress *addr) { return -1; }
 
 void Socket::shutdownWrite() {}
 
