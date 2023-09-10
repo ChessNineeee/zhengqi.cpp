@@ -1,6 +1,8 @@
 set(networking_SRCS
     Socket.cpp
     InetAddress.cpp
+        SocketsOps.cpp
+
     )
 
 add_library(zhengqi_networking ${networking_SRCS})
@@ -15,4 +17,5 @@ set(HEADERS
     )
 
 install(FILES ${HEADERS} DESTINATION include/networking)
+add_subdirectory(tests)
 

@@ -1,3 +1,6 @@
+file(GLOB Catch2 "catch_amalgamated.h")
+install(FILES ${Catch2} DESTINATION include/utility/test)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 add_executable(mutex_test Mutex_test.cpp)
 target_link_libraries(mutex_test zhengqi_utility)
