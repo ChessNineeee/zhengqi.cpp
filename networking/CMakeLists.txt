@@ -2,6 +2,8 @@ set(networking_SRCS
     Socket.cpp
     InetAddress.cpp
         SocketsOps.cpp
+        Channel.cpp
+        Buffer.cpp
 
     )
 
@@ -14,6 +16,8 @@ install(TARGETS zhengqi_networking DESTINATION lib)
 
 set(HEADERS
     InetAddress.h
+    Buffer.h
+    Channel.h
     )
 
 install(FILES ${HEADERS} DESTINATION include/networking)

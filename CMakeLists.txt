@@ -23,18 +23,18 @@ set(CXX_FLAGS
         # -MMD
         -std=c++11
         -rdynamic
-        )
+)
 
-if(CMAKE_BUILD_BITS EQUAL 32)
+if (CMAKE_BUILD_BITS EQUAL 32)
     list(APPEND CXX_FLAGS "-m32")
-endif()
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+endif ()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND CXX_FLAGS "-Wno-null-dereference")
     list(APPEND CXX_FLAGS "-Wno-sign-conversion")
     list(APPEND CXX_FLAGS "-Wno-unused-local-typedef")
     list(APPEND CXX_FLAGS "-Wthread-safety")
     list(REMOVE_ITEM CXX_FLAGS "-rdynamic")
-endif()
+endif ()
 string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0")
@@ -53,4 +53,4 @@ add_subdirectory(utility)
 add_subdirectory(networking)
 add_subdirectory(contrib)
 add_subdirectory(brpc)
-add_subdirectory(abseil-cpp)
+# add_subdirectory(abseil-cpp)
