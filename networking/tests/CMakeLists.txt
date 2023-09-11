@@ -1,3 +1,6 @@
 add_executable(inetaddress_unittest InetAddress_unittest.cpp)
 target_link_libraries(inetaddress_unittest zhengqi_networking)
 add_test(NAME inetaddress_unittest COMMAND inetaddress_unittest)
+add_executable(buffer_unittest Buffer_unittest.cpp)
+target_link_libraries(buffer_unittest zhengqi_networking)
+add_test(NAME buffer_unittest COMMAND buffer_unittest)
