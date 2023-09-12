@@ -90,6 +90,16 @@ TimerQueue::TimerQueue(EventLoop *loop)
     : loop_(loop), timerfd_(createTimerfd()), timerfdChannel_(loop, timerfd_),
       timers_(), callingExpiredTimers_(false) {}
 
+TimerQueue::~TimerQueue() {
+  timerfdChannel_.disableAll();
+  timerfdChannel_.remove();
+  ::close(timerfd_);
+
+  for (const Entry &it : timers_) {
+    delete it.second;
+  }
+}
+
 TimerId TimerQueue::addTimer(TimerCallback cb, Timestamp when,
                              double interval) {
   Timer *timer = new Timer(std::move(cb), when, interval);

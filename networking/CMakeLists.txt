@@ -8,6 +8,8 @@ set(networking_SRCS
         Poller.cpp
         TimerQueue.cpp
         Timer.cpp
+        poller/EPollPoller.cpp
+        poller/PollPoller.cpp
 )
 
 add_library(zhengqi_networking ${networking_SRCS})
