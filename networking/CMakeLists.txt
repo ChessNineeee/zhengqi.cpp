@@ -6,6 +6,8 @@ set(networking_SRCS
         Buffer.cpp
         EventLoop.cpp
         Poller.cpp
+        TimerQueue.cpp
+        Timer.cpp
 )
 
 add_library(zhengqi_networking ${networking_SRCS})
@@ -23,7 +25,6 @@ set(HEADERS
         Endian.h
         EventLoop.h
         TimerId.h
-
 )
 
 install(FILES ${HEADERS} DESTINATION include/networking)

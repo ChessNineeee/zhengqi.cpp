@@ -44,6 +44,7 @@ private:
   EventLoop *loop_;
   const int timerfd_;
   Channel timerfdChannel_;
+  TimerList timers_;
 
   ActiveTimerSet activeTimers_;
   bool callingExpiredTimers_;
