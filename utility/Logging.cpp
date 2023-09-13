@@ -107,7 +107,6 @@ void Logger::Impl::formatTime() {
     int len =
         snprintf(t_time, sizeof(t_time), "%4d%02d%02d %02d:%02d:%02d", dt.year,
                  dt.month, dt.day, dt.hour, dt.minute, dt.second);
-
     assert(len == 17);
     (void)len;
   }

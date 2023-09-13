@@ -52,13 +52,13 @@ void logInThread() {
 int main() {
   getppid(); // for ltrace and strace
 
-  zhengqi::utility::ThreadPool pool("pool");
-  pool.start(5);
-  pool.run(logInThread);
-  pool.run(logInThread);
-  pool.run(logInThread);
-  pool.run(logInThread);
-  pool.run(logInThread);
+  //  zhengqi::utility::ThreadPool pool("pool");
+  //  pool.start(5);
+  //  pool.run(logInThread);
+  //  pool.run(logInThread);
+  //  pool.run(logInThread);
+  //  pool.run(logInThread);
+  //  pool.run(logInThread);
 
   LOG_TRACE << "trace";
   LOG_DEBUG << "debug";

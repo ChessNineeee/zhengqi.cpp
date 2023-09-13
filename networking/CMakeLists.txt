@@ -8,6 +8,7 @@ set(networking_SRCS
         Poller.cpp
         TimerQueue.cpp
         Timer.cpp
+        poller/DefaultPoller.cpp
         poller/EPollPoller.cpp
         poller/PollPoller.cpp
 )

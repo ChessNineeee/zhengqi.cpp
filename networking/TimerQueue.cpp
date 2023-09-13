@@ -88,7 +88,10 @@ using namespace zhengqi::networking::detail;
 
 TimerQueue::TimerQueue(EventLoop *loop)
     : loop_(loop), timerfd_(createTimerfd()), timerfdChannel_(loop, timerfd_),
-      timers_(), callingExpiredTimers_(false) {}
+      timers_(), callingExpiredTimers_(false) {
+  timerfdChannel_.setReadCallback(std::bind(&TimerQueue::handleRead, this));
+  timerfdChannel_.enableReading();
+}
 
 TimerQueue::~TimerQueue() {
   timerfdChannel_.disableAll();
