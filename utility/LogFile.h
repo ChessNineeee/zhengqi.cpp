@@ -5,9 +5,9 @@
 #ifndef ZHENGQI_CPP_LOGFILE_H
 #define ZHENGQI_CPP_LOGFILE_H
 
-#include "MutexLock.h"
-#include "Types.h"
-#include "noncopyable.h"
+#include "utility/MutexLock.h"
+#include "utility/Types.h"
+#include "utility/noncopyable.h"
 
 #include <memory>
 

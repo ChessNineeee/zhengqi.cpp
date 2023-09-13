@@ -1,8 +1,8 @@
 #ifndef CPP_THREADLOCAL_H
 #define CPP_THREADLOCAL_H
 
-#include "MutexLock.h"
-#include "noncopyable.h"
+#include "utility/MutexLock.h"
+#include "utility/noncopyable.h"
 
 #include <pthread.h>
 

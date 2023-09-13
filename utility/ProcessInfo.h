@@ -5,9 +5,9 @@
 #ifndef ZHENGQI_CPP_PROCESSINFO_H
 #define ZHENGQI_CPP_PROCESSINFO_H
 
-#include "StringPiece.h"
-#include "Timestamp.h"
-#include "Types.h"
+#include "utility/StringPiece.h"
+#include "utility/Timestamp.h"
+#include "utility/Types.h"
 #include <sys/types.h>
 #include <vector>
 

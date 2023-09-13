@@ -13,6 +13,7 @@ set(networking_SRCS
         poller/DefaultPoller.cpp
         poller/EPollPoller.cpp
         poller/PollPoller.cpp
+        TcpConnection.cpp
 )
 
 add_library(zhengqi_networking ${networking_SRCS})
@@ -32,6 +33,7 @@ set(HEADERS
         EventLoopThread.h
         EventLoopThreadPool.h
         TimerId.h
+        TcpConnection.h
 )
 
 install(FILES ${HEADERS} DESTINATION include/networking)

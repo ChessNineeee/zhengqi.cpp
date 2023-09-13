@@ -5,8 +5,8 @@
 #ifndef ZHENGQI_CPP_FILEUTIL_H
 #define ZHENGQI_CPP_FILEUTIL_H
 
-#include "StringPiece.h"
-#include "noncopyable.h"
+#include "utility/StringPiece.h"
+#include "utility/noncopyable.h"
 #include <sys/types.h> // for off_t
 
 namespace zhengqi {

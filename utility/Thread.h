@@ -5,9 +5,9 @@
 #ifndef CPP_THREAD_H
 #define CPP_THREAD_H
 
-#include "Atomic.h"
-#include "CountDownLatch.h"
-#include "noncopyable.h"
+#include "utility/Atomic.h"
+#include "utility/CountDownLatch.h"
+#include "utility/noncopyable.h"
 #include <functional>
 #include <memory>
 #include <string>

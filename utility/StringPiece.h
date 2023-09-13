@@ -49,7 +49,7 @@
 // 用以实现高效的字符串传递，这里既可以用const char*，
 // 也可以用std::string类型作为参数，并且不涉及内存拷贝
 
-#include "Types.h"
+#include "utility/Types.h"
 
 #ifndef CPP_STRINGPIECE_H
 #define CPP_STRINGPIECE_H

@@ -5,9 +5,9 @@
 #ifndef CPP_TIMESTAMP_H
 #define CPP_TIMESTAMP_H
 
-#include "Types.h"
-#include "boost_operator.h"
-#include "copyable.h"
+#include "utility/Types.h"
+#include "utility/boost_operator.h"
+#include "utility/copyable.h"
 #include <algorithm>
 #include <stdint.h>
 

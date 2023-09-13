@@ -1,9 +1,9 @@
-#include "Logging.h"
+#include "utility/Logging.h"
 
-#include "CurrentThread.h"
-#include "TimeZone.h"
-#include "Timestamp.h"
+#include "utility/CurrentThread.h"
 #include "utility/LogStream.h"
+#include "utility/TimeZone.h"
+#include "utility/Timestamp.h"
 
 #include <cassert>
 #include <cstdlib>
