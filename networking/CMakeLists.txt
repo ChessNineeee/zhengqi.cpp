@@ -5,6 +5,7 @@ set(networking_SRCS
         Channel.cpp
         Buffer.cpp
         EventLoop.cpp
+        EventLoopThread.cpp
         Poller.cpp
         TimerQueue.cpp
         Timer.cpp
@@ -27,6 +28,7 @@ set(HEADERS
         Callbacks.h
         Endian.h
         EventLoop.h
+        EventLoopThread.h
         TimerId.h
 )
 
