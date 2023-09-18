@@ -144,5 +144,3 @@ TEST_CASE("testBufferMove") {
   const void *inner = buf.peek();
   output(std::move(buf), inner);
 }
-
-  
