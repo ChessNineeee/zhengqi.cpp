@@ -115,4 +115,6 @@ std::string Channel::eventsToString(int fd, int ev) {
     oss << "ERR ";
   if (ev & POLLNVAL)
     oss << "NVAL ";
+
+  return oss.str();
 }

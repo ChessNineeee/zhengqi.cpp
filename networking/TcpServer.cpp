@@ -64,6 +64,15 @@ void TcpServer::newConnection(int sockfd, const InetAddress &peerAddr) {
   ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));
 }
 
+void TcpServer::start() {
+  if (started_.getAndSet(1) == 0) {
+    threadPool_->start(threadInitCallback_);
+
+    assert(!acceptor_->listening());
+    loop_->runInLoop(std::bind(&Acceptor::listen, get_pointer(acceptor_)));
+  }
+}
+
 void TcpServer::removeConnection(const TcpConnectionPtr &conn) {
   loop_->runInLoop(std::bind(&TcpServer::removeConnectionInLoop, this, conn));
 }

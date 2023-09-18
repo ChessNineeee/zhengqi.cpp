@@ -13,14 +13,16 @@
 using namespace zhengqi::utility;
 using namespace zhengqi::networking;
 
-void defaultConnectionCallback(const TcpConnectionPtr &conn) {
+void zhengqi::networking::defaultConnectionCallback(
+    const TcpConnectionPtr &conn) {
   LOG_TRACE << conn->localAddress().toIpPort() << " -> "
             << conn->peerAddress().toIpPort() << " is "
             << (conn->connected() ? "UP" : "DOWN");
 }
 
-void defaultMessageCallback(const TcpConnectionPtr &conn, Buffer *buffer,
-                            Timestamp receiveTime) {
+void zhengqi::networking::defaultMessageCallback(const TcpConnectionPtr &conn,
+                                                 Buffer *buffer,
+                                                 Timestamp receiveTime) {
   buffer->retrieveAll();
 }
 
@@ -30,7 +32,7 @@ TcpConnection::TcpConnection(EventLoop *loop, const std::string &name,
     : loop_(CHECK_NOTNULL(loop)), name_(name), state_(kConnecting),
       reading_(true), socket_(new Socket(sockfd)),
       channel_(new Channel(loop, sockfd)), localAddr_(localAddr),
-      peerAddr_(peerAddr_), highWaterMark_(64 * 1024 * 1024) {
+      peerAddr_(peerAddr), highWaterMark_(64 * 1024 * 1024) {
   channel_->setReadCallback(std::bind(&TcpConnection::handleRead, this, _1));
   channel_->setWriteCallback(std::bind(&TcpConnection::handleWrite, this));
   channel_->setCloseCallback(std::bind(&TcpConnection::handleClose, this));
@@ -181,6 +183,14 @@ void TcpConnection::startRead() {
 
 void TcpConnection::stopRead() {
   loop_->runInLoop(std::bind(&TcpConnection::stopReadInLoop, this));
+}
+
+void TcpConnection::startReadInLoop() {
+  loop_->assertInLoopThread();
+  if (!reading_ || !channel_->isReading()) {
+    channel_->enableReading();
+    reading_ = true;
+  }
 }
 
 void TcpConnection::stopReadInLoop() {
