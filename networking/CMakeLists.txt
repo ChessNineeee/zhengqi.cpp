@@ -15,6 +15,7 @@ set(networking_SRCS
         poller/EPollPoller.cpp
         poller/PollPoller.cpp
         TcpConnection.cpp
+        TcpServer.cpp
         TcpClient.cpp
 )
 
@@ -36,6 +37,7 @@ set(HEADERS
         EventLoopThreadPool.h
         TimerId.h
         TcpConnection.h
+        TcpServer.h
         TcpClient.h
 )
 
