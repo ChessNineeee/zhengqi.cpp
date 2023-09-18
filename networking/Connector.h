@@ -39,7 +39,7 @@ private:
   void startInLoop();
   void stopInLoop();
   void connect();
-  void connecting();
+  void connecting(int sockfd);
   void handleWrite();
   void handleError();
   void retry(int sockfd);
