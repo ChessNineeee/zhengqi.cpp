@@ -21,7 +21,9 @@ public:
   Connector(EventLoop *loop, const InetAddress &serverAddr);
   ~Connector();
 
-  void setNewConnectionCallback(const NewConnectionCallback &cb) {}
+  void setNewConnectionCallback(const NewConnectionCallback &cb) {
+    newConnectionCallback_ = cb;
+  }
 
   void start();   // can be called in any thread
   void restart(); // can be called in any thread
