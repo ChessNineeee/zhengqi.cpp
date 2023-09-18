@@ -150,7 +150,7 @@ void EPollPoller::update(int operation, Channel *channel) {
                  << " fd =" << fd;
     } else {
       LOG_SYSFATAL << "epoll_ctl op=" << operationToString(operation)
-                   << " fd =" << fd;
+                   << " fd=" << fd;
     }
   }
 }

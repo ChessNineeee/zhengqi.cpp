@@ -49,6 +49,8 @@ int Socket::accept(InetAddress *peeraddr) {
   struct sockaddr_in6 addr;
   memZero(&addr, sizeof addr);
   int connfd = sockets::accept(sockfd_, &addr);
+  assert(sockfd_ != connfd);
+  LOG_TRACE << "accept sockfd: " << connfd << " sockfd_: " << sockfd_;
   if (connfd >= 0) {
     peeraddr->setSockAddrInet6(addr);
   }

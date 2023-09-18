@@ -10,6 +10,8 @@
 using namespace zhengqi::utility;
 using namespace zhengqi::networking;
 
+const int Connector::kMaxRetryDelayMs;
+
 Connector::Connector(EventLoop *loop, const InetAddress &serverAddr)
     : loop_(loop), serverAddr_(serverAddr), connect_(false),
       state_(kDisconnected), retryDelayMs_(kInitRetryDelayMs) {
@@ -164,7 +166,7 @@ void Connector::retry(int sockfd) {
     loop_->runAfter(retryDelayMs_ / 1000.0,
                     std::bind(&Connector::startInLoop, shared_from_this()));
 
-    retryDelayMs_ = std::min(retryDelayMs_ * 2, kMaxRetryDelayMs);
+    retryDelayMs_ = std::min(retryDelayMs_ * 2, Connector::kMaxRetryDelayMs);
   } else {
     LOG_DEBUG << "do not connect";
   }

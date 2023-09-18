@@ -107,6 +107,9 @@ int sockets::accept(int sockfd, struct sockaddr_in6 *addr) {
                          SOCK_NONBLOCK | SOCK_CLOEXEC);
 #endif
 
+  assert(connfd != sockfd);
+  LOG_TRACE << "connfd: " << connfd << " sockfd: " << sockfd;
+
   if (connfd < 0) {
     int savedErrno = errno;
     LOG_SYSERR << "Socket::accept";
@@ -134,7 +137,7 @@ int sockets::accept(int sockfd, struct sockaddr_in6 *addr) {
       break;
     }
   }
-  return sockfd;
+  return connfd;
 }
 
 int sockets::connect(int sockfd, const struct sockaddr *addr) {

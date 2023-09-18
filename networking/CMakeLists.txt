@@ -32,6 +32,7 @@ set(HEADERS
         Buffer.h
         Channel.h
         Callbacks.h
+        Connector.h
         Endian.h
         EventLoop.h
         EventLoopThread.h

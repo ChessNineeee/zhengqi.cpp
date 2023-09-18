@@ -25,12 +25,12 @@ const char *strerror_tl(int savedErrno) {
 }
 
 Logger::LogLevel initLogLevel() {
-  if (::getenv("ZHENGQI_LOG_TRACE"))
-    return Logger::TRACE;
+  if (::getenv("ZHENGQI_LOG_INFO"))
+    return Logger::INFO;
   else if (::getenv("ZHENGQI_LOG_DEBUG"))
     return Logger::DEBUG;
   else
-    return Logger::INFO;
+    return Logger::TRACE;
 }
 
 Logger::LogLevel g_logLevel = initLogLevel();
