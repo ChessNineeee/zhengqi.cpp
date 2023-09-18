@@ -243,7 +243,7 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd) {
   struct sockaddr_in6 localaddr;
   memZero(&localaddr, sizeof localaddr);
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
-  if (::getpeername(sockfd, sockaddr_cast(&localaddr), &addrlen) < 0) {
+  if (::getsockname(sockfd, sockaddr_cast(&localaddr), &addrlen) < 0) {
     LOG_SYSERR << "sockets::getLocalAddr";
   }
 
@@ -263,7 +263,7 @@ bool sockets::isSelfConnect(int sockfd) {
   } else if (localaddr.sin6_family == AF_INET6) {
     return localaddr.sin6_port == peeraddr.sin6_port &&
            memcmp(&localaddr.sin6_addr, &peeraddr.sin6_addr,
-                  sizeof localaddr.sin6_addr);
+                  sizeof localaddr.sin6_addr) == 0;
   } else {
     return false;
   }
