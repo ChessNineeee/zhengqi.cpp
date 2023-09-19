@@ -90,6 +90,12 @@ public:
     writerIndex_ = kCheapPrepend;
   }
 
+  void retrieveUntil(const char *end) {
+    assert(peek() <= end);
+    assert(end <= beginWrite());
+    retrieve(end - peek());
+  }
+
   std::string retrieveAllAsString() {
     return retrieveAsString(readableBytes());
   }
