@@ -45,4 +45,4 @@ set(HEADERS
 
 install(FILES ${HEADERS} DESTINATION include/networking)
 add_subdirectory(tests)
-
+add_subdirectory(http)
