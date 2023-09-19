@@ -4,7 +4,7 @@ set -x
 
 SOURCE_DIR=`pwd`
 BUILD_DIR=${BUILD_DIR:-../zhengqi-build}
-BUILD_TYPE=${BUILD_TYPE:-release}
+BUILD_TYPE=${BUILD_TYPE:-debug}
 INSTALL_DIR=${INSTALL_DIR:-../zhengqi-${BUILD_TYPE}-install-cpp11}
 CXX=${CXX:-g++}
 

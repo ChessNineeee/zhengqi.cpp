@@ -51,7 +51,7 @@ EventLoop::EventLoop()
       threadId_(CurrentThread::tid()), poller_(Poller::newDefaultPoller(this)),
       timerQueue_(new TimerQueue(this)), wakeupFd_(createEventfd()),
       wakeupChannel_(new Channel(this, wakeupFd_)) {
-  LOG_TRACE << "EventLoop created " << this << " in thread " << threadId_;
+  LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
   if (t_loopInThisThread) {
     LOG_FATAL << "Another EventLoop " << t_loopInThisThread
               << " exists in this thread " << threadId_;
@@ -63,7 +63,7 @@ EventLoop::EventLoop()
 }
 
 EventLoop::~EventLoop() {
-  LOG_TRACE << "EventLoop " << this << " of thread " << threadId_
+  LOG_DEBUG << "EventLoop " << this << " of thread " << threadId_
             << " destructs in thread " << CurrentThread::tid();
   wakeupChannel_->disableAll();
   wakeupChannel_->remove();
