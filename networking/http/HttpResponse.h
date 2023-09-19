@@ -5,6 +5,7 @@
 #include "utility/copyable.h"
 
 #include <map>
+#include <string>
 
 namespace zhengqi {
 namespace networking {

@@ -18,4 +18,3 @@ set(
         )
 install(FILES ${HEADERS} DESTINATION include/networking/http)
 
-
