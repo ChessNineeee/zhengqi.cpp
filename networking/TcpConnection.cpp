@@ -75,6 +75,19 @@ void TcpConnection::send(const StringPiece &message) {
   }
 }
 
+void TcpConnection::send(Buffer *message) {
+  if (state_ == kConnected) {
+    if (loop_->isInLoopThread()) {
+      sendInLoop(message->peek(), message->readableBytes());
+      message->retrieveAll();
+    } else {
+      void (TcpConnection::*fp)(const StringPiece &message) =
+          &TcpConnection::sendInLoop;
+      loop_->runInLoop(std::bind(fp, this, message->retrieveAllAsString()));
+    }
+  }
+}
+
 void TcpConnection::sendInLoop(const StringPiece &message) {
   sendInLoop(message.data(), message.size());
 }

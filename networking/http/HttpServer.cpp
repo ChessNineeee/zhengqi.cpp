@@ -31,9 +31,15 @@ HttpServer::HttpServer(EventLoop *loop, const InetAddress &listenAddr,
 }
 
 void HttpServer::start() {
-  LOG_WARN << "HttpServer[" << server_.name() << "] starts listening on "
-           << server_.ipPort();
+  LOG_DEBUG << "HttpServer[" << server_.name() << "] starts listening on "
+            << server_.ipPort();
   server_.start();
+}
+
+void HttpServer::onConnection(const TcpConnectionPtr &conn) {
+  if (conn->connected()) {
+    conn->setContext(HttpContext());
+  }
 }
 
 void HttpServer::onMessage(const TcpConnectionPtr &conn, Buffer *buf,

@@ -14,9 +14,9 @@ extern char favicon[555];
 bool benchmark = false;
 
 void onRequest(const HttpRequest &req, HttpResponse *resp) {
-  std::cout << "Headers " << req.methodString() << " " << req.path()
-            << std::endl;
   if (!benchmark) {
+    std::cout << "Headers " << req.methodString() << " " << req.path()
+              << std::endl;
     const std::map<string, string> &headers = req.headers();
     for (const auto &header : headers) {
       std::cout << header.first << ": " << header.second << std::endl;
@@ -42,7 +42,7 @@ void onRequest(const HttpRequest &req, HttpResponse *resp) {
     resp->setStatusMessage("OK");
     resp->setContentType("text/plain");
     resp->addHeader("Server", "Zhengqi");
-    resp->setBody("hello, world!\n");
+    resp->setBody("hello\n");
   } else {
     resp->setStatusCode(HttpResponse::k404NotFound);
     resp->setStatusMessage("Not Found");
