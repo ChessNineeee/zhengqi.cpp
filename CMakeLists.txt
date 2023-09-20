@@ -42,6 +42,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
+find_package(Boost REQUIRED)
+find_path(TCMALLOC_INCLUDE_DIR NAMES gperftools/heap-profiler.h)
+find_package(TCMALLOC_LIBRARY NAMES tcmalloc_and_profiler)
 install()
 
 include_directories(${PROJECT_SOURCE_DIR})

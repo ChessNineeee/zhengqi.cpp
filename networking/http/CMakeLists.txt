@@ -18,3 +18,7 @@ set(
         )
 install(FILES ${HEADERS} DESTINATION include/networking/http)
 
+if(ZHENGQI_BUILD_EXAMPLES)
+        add_executable(httpserver_test tests/HttpServer_test.cpp)
+        target_link_libraries(httpserver_test zhengqi_http)
+endif()
