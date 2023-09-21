@@ -53,7 +53,7 @@ std::string PerformanceInspector::profile(HttpRequest::Method,
   filename += ".profile";
 
   std::string profile;
-  if (ProfilerStart(fileName.c_str())) {
+  if (ProfilerStart(filename.c_str())) {
     CurrentThread::sleepUsec(30 * 1000 * 1000);
     ProfilerStop();
     FileUtil::readFile(filename, 1024 * 1024, &profile, NULL, NULL);

@@ -71,14 +71,14 @@ int main(int argc, char *argv[]) {
         return 1;
       }
     }
+    uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
+    InetAddress listenAddr(port);
+    EventLoop loop;
+    TcpServer server(&loop, listenAddr, "TcpBalancer");
+    server.setConnectionCallback(onServerConnection);
+    server.setMessageCallback(onServerMessage);
+    server.setThreadNum(4);
+    server.start();
+    loop.loop();
   }
-  uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
-  InetAddress listenAddr(port);
-  EventLoop loop;
-  TcpServer server(&loop, listenAddr, "TcpBalancer");
-  server.setConnectionCallback(onServerConnection);
-  server.setMessageCallback(onServerMessage);
-  server.setThreadNum(4);
-  server.start();
-  loop.loop();
 }

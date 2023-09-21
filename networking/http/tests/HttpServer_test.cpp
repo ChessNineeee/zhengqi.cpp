@@ -4,6 +4,7 @@
 #include "networking/http/HttpServer.h"
 #include "utility/Logging.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <map>
 
@@ -52,13 +53,15 @@ void onRequest(const HttpRequest &req, HttpResponse *resp) {
 
 int main(int argc, char *argv[]) {
   int numThreads = 0;
-  if (argc > 1) {
+  uint16_t port = 8000;
+  if (argc > 2) {
     benchmark = true;
     Logger::setLogLevel(Logger::WARN);
-    numThreads = atoi(argv[1]);
+    port = static_cast<uint16_t>(atoi(argv[1]));
+    numThreads = atoi(argv[2]);
   }
   EventLoop loop;
-  HttpServer server(&loop, InetAddress(8000), "dummy");
+  HttpServer server(&loop, InetAddress(port), "dummy");
   server.setHttpCallback(onRequest);
   server.setThreadNum(numThreads);
   server.start();

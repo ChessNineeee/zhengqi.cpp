@@ -1,6 +1,6 @@
-#add_executable(balancer balancer.cpp)
-#target_link_libraries(balancer zhengqi_networking)
-#
+add_executable(balancer balancer.cpp)
+target_link_libraries(balancer zhengqi_networking)
+
 #add_executable(tcprelay tcprelay.cpp)
 #target_link_libraries(tcprelay zhengqi_networking)
 

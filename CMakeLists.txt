@@ -43,8 +43,19 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 find_package(Boost REQUIRED)
+find_path(CARES_INCLUDE_DIR NAMES ares.h )
+find_library(CARES_LIBRARY NAMES cares )
 find_path(TCMALLOC_INCLUDE_DIR NAMES gperftools/heap-profiler.h)
-find_package(TCMALLOC_LIBRARY NAMES tcmalloc_and_profiler)
+find_library(TCMALLOC_LIBRARY NAMES tcmalloc_and_profiler)
+
+if(CARES_INCLUDE_DIR AND CARES_LIBRARY)
+  message(STATUS "found cares")
+endif()
+
+if(TCMALLOC_INCLUDE_DIR AND TCMALLOC_LIBRARY)
+  message(STATUS "found tcmalloc")
+endif()
+
 install()
 
 include_directories(${PROJECT_SOURCE_DIR})
