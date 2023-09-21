@@ -43,10 +43,15 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 find_package(Boost REQUIRED)
+find_package(CURL REQUIRED)
 find_path(CARES_INCLUDE_DIR NAMES ares.h )
 find_library(CARES_LIBRARY NAMES cares )
 find_path(TCMALLOC_INCLUDE_DIR NAMES gperftools/heap-profiler.h)
 find_library(TCMALLOC_LIBRARY NAMES tcmalloc_and_profiler)
+
+if (CURL_FOUND)
+  message(STATUS "found curl")
+endif()
 
 if(CARES_INCLUDE_DIR AND CARES_LIBRARY)
   message(STATUS "found cares")

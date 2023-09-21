@@ -5,3 +5,5 @@ target_link_libraries(zhengqi_cdns cares)
 install(TARGETS zhengqi_cdns DESTINATION lib)
 install(FILES Resolver.h DESTINATION include/zhengqi/cdns)
 
+add_executable(cdns dns.cpp)
+target_link_libraries(cdns zhengqi_cdns)

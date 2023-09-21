@@ -7,3 +7,14 @@ Copyright (c) 2023, Zhengqi Wu.  All rights reserved.
 Use of this source code is governed by a BSD-style
 license that can be found in the License file.
 
+Requires:
+  Linux kernel version >= 2.6.28.
+  GCC >= 4.7 or Clang >= 3.5
+  Boost (for boost::any only.)
+
+Tested on:
+  Ubuntu 20.04 and above
+
+Install required packages:
+  # Ubuntu
+  sudo apt install g++ cmake make libboost-dev libc-ares-dev libcurl4-openssl-dev libgoogle-perftools-dev libprotobuf-dev
