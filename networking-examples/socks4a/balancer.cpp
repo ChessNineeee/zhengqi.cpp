@@ -1,10 +1,14 @@
 #include "networking-examples/socks4a/tunnel.h"
 #include "networking/Callbacks.h"
+#include "networking/EventLoop.h"
 #include "networking/InetAddress.h"
+#include "networking/TcpServer.h"
 #include "utility/Logging.h"
 #include "utility/ThreadLocal.h"
 #include <boost/any.hpp>
 #include <cassert>
+#include <cstdio>
+#include <cstdlib>
 #include <vector>
 
 using namespace zhengqi::utility;
@@ -47,4 +51,34 @@ void onServerMessage(const TcpConnectionPtr &conn, Buffer *buf, Timestamp) {
         boost::any_cast<const TcpConnectionPtr &>(conn->getContext());
     clientConn->send(buf);
   }
+}
+
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    fprintf(stderr, "Usage: %s listen_port backend_ip:port [backend_ip:port]\n",
+            argv[0]);
+  } else {
+    for (int i = 2; i < argc; i++) {
+      std::string hostport = argv[i];
+      size_t colon = hostport.find(':');
+      if (colon != std::string::npos) {
+        std::string ip = hostport.substr(0, colon);
+        uint16_t port =
+            static_cast<uint16_t>(atoi(hostport.c_str() + colon + 1));
+        g_backends.push_back(InetAddress(ip, port));
+      } else {
+        fprintf(stderr, "invalid backend address %s\n", argv[i]);
+        return 1;
+      }
+    }
+  }
+  uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
+  InetAddress listenAddr(port);
+  EventLoop loop;
+  TcpServer server(&loop, listenAddr, "TcpBalancer");
+  server.setConnectionCallback(onServerConnection);
+  server.setMessageCallback(onServerMessage);
+  server.setThreadNum(4);
+  server.start();
+  loop.loop();
 }
