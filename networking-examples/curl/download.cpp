@@ -1,4 +1,5 @@
 #include "networking-examples/curl/Curl.h"
+#include "networking/Callbacks.h"
 #include "networking/EventLoop.h"
 #include "utility/Logging.h"
 #include <sstream>
@@ -49,7 +50,12 @@ public:
   Downloader(EventLoop *loop, const string &url)
       : loop_(loop), curl_(loop_), url_(url), req_(curl_.getUrl(url_)),
         found_(false), acceptRanges_(false), length_(0), pieces_(kConcurrent),
-        concurrent_(0) {}
+        concurrent_(0) {
+    req_->setHeaderCallback(std::bind(&Downloader::onHeader, this, _1, _2));
+    req_->setDoneCallback(std::bind(&Downloader::onHeaderDone, this, _1, _2));
+
+    req_->headerOnly();
+  }
 
 private:
   void onHeader(const char *data, int len) {
@@ -76,6 +82,43 @@ private:
       concurrentDownload();
     }
   }
+
+  void concurrentDownload() {
+    const int64_t pieceLen = length_ / kConcurrent;
+    for (int i = 0; i < kConcurrent; i++) {
+      char buf[256];
+      snprintf(buf, sizeof buf, "output-%05d-of-%05d", i, kConcurrent);
+      FILE *fp = ::fopen(buf, "wb");
+      if (fp) {
+        FilePtr out(fp, ::fclose);
+        RequestPtr req = curl_.getUrl(url_);
+
+        std::ostringstream range;
+        if (i < kConcurrent - 1) {
+          range << i * pieceLen << "-" << (i + 1) * pieceLen - 1;
+        } else {
+          range << i * pieceLen << "-" << length_ - 1;
+        }
+        pieces_[static_cast<unsigned long>(i)].reset(
+            new Piece(req, out, range.str(),
+                      std::bind(&Downloader::onDownloadDone, this)));
+      } else {
+        LOG_ERROR << "Can not create output file: " << buf;
+        loop_->quit();
+      }
+    }
+  }
+
+  void onData(const char *data, int len) {
+    ::fwrite(data, 1, static_cast<size_t>(len), get_pointer(out_));
+  }
+
+  void onDownloadDone() {
+    if (--concurrent_ <= 0) {
+      loop_->quit();
+    }
+  }
+
   EventLoop *loop_;
   Curl curl_;
   string url_;
@@ -90,3 +133,13 @@ private:
 
   const static int kConcurrent = 4;
 };
+
+int main(int argc, char *argv[]) {
+  EventLoop loop;
+  Curl::initialize(Curl::kCURLssl);
+  string url =
+      argc > 1 ? argv[1]
+               : "https:://chenshuo-public.s3.amazonaws.com/pdf/allinone.pdf";
+  Downloader d(&loop, url);
+  loop.loop();
+}
