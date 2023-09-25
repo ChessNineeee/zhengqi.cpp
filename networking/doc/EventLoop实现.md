@@ -1,6 +1,24 @@
-在muduo中，`EventLoop`的实现在`muduo/net/EventLoop.{h/cpp}`文件中，其中`EventLoop.h`包含了`EventLoop`的数据成员定义和其接口的声明；`EventLoop.cpp`包含了`EventLoop`接口的具体实现。
+# 什么是事件循环
+
+事件循环是一种高性能网络程序常用的编程范式，程序的基本结构就是一个事件循环，通过事件驱动和事件回调的方式来实现业务逻辑。
+
+# 事件循环有什么用
+
+事件循环代表了线程的主循环，需要让哪个线程干活时，就可以把定时器对象和文件对象注册到该循环中。对实时性有要求的TCP连接可以单独使用一个事件循环，数据传输量大的TCP连接可以单独使用一个事件循环，次要的、辅助性的TCP连接可以共享一个事件循环。
+
+# 为什么用事件循环
+
+1. 线程数目基本固定，可以在程序启动的时候设置，不会频繁创建与销毁。
+2. 可以很方便的在线程之间分配负载。
+3. 处理I/O事件的线程是固定的，同一个TCP连接不必考虑事件处理的并发问题。
+
+# 前言
+
+作为一个基于事件循环的多线程C++网络库，muduo在互联网中一直有着良好的声誉，与boost::asio、libevent等成熟网络库相比，它的实现更为简单，并且有着良好的性能。本着学习C++多线程网络编程的目的，本文将对muduo中事件循环的实现进行深入研究与探索。
 
 # 关键数据成员
+
+在muduo中，`EventLoop`的实现在`muduo/net/EventLoop.{h/cpp}`文件中，其中`EventLoop.h`包含了`EventLoop`的数据成员定义和其接口的声明；`EventLoop.cpp`包含了`EventLoop`接口的具体实现。
 
 `EventLoop`中有几个重要的数据成员，它们的定义如下：
 ```cpp
@@ -23,7 +41,7 @@ class EventLoop {
 };
 ```
 
-从定义中我们可以发现，一个`EventLoop`由一个`Poller`、一个`TimerQueue`和多个`Channel`组成；`Poller` 可以被认为是一个负责轮询网络连接的数据结构，`TimerQueue` 可以被认为是一个处理`EventLoop`中定时事件的数据结构，`Channel` 可以被认为是一个封装好的数据结构，它主要被用来表示网络连接以及该连接上所发生的事件。
+从定义中我们可以发现，一个`EventLoop`由一个`Poller`、一个`TimerQueue`和多个`Channel`组成；`Poller` 可以被认为是一个负责轮询I/O事件的数据结构，`TimerQueue` 可以被认为是一个处理`EventLoop`中定时事件的数据结构，`Channel` 可以被认为是一个封装好的数据结构，它主要被用来表示文件以及该文件上所发生的I/O事件。
 
 接下来我们详细分析`EventLoop`的关键数据成员，由于`Poller` 和`TimerQueue` 结构的定义中同样包含 `Channel` 类型的成员，因此为了降低理解的难度，我们首先分析`Channel`的实现。
 
@@ -176,7 +194,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime) {
 
 ## Poller
 
-`Poller` 是muduo 对`Poll/Epoll` 系统调用的一个通用封装，向外部提供一个轮询的接口，主要被`EventLoop` 用来监听连接上的I/O事件。
+`Poller` 是muduo 对`Poll/Epoll` 系统调用的一个通用封装，向外部提供一个轮询的接口，主要被`EventLoop` 用来监听文件上的I/O事件。
 
 ### Poller 关键数据成员
 
@@ -199,7 +217,7 @@ private:
 
 ### poll 接口
 
-`poll` 接口是muduo对`Poll/Epoll` 系统调用的封装，它的函数原型是`Timestamp poll(int timeoutMs, vector<Channel*> *activeChannels)`，其中函数的返回值表示从系统调用返回时的时间戳，参数`timeoutMs` 表示`Poll/Epoll` 系统调用阻塞等待的毫秒数，参数`activeChannels` 是一个`Channel` 的动态数组，用于记录本次系统调用监听到的所发生的事件；
+`poll` 接口是muduo对`Poll/Epoll` 系统调用的封装，它的函数原型是`Timestamp poll(int timeoutMs, vector<Channel*> *activeChannels)`，其中函数的返回值表示从系统调用返回时的时间戳，参数`timeoutMs` 表示`Poll/Epoll` 系统调用阻塞等待的毫秒数，参数`activeChannels` 是一个`Channel` 的动态数组，用于记录本次系统调用监听到的所发生的事件。
 
 该接口在`Poller` 中是纯虚函数，具体的实现由`muduo/net/poller/PollPoller.cc` 和 `muduo/net/poller/EPollPoller.cc` 提供：
 
@@ -319,7 +337,7 @@ void EpollPoller::update(int operation, Channel* channel) {
 介绍完`update` 函数和`index` 成员后，我们来看看`updateChannel` 接口所做的具体操作：
 1. 当`Channel` 的状态是`kNew` 或者`kDeleted` 时，调用`update(EPOLL_CTL_ADD, channel)` 和 `set_index(kAdded)`：`kNew` 和`kDeleted` 都表示该文件上我们感兴趣的事件类型没有被加入到`epoll instance` 中，因此通过`EPOLL_CTL_ADD` 操作将其加入，并将`Channel` 的状态设置为`kAdded`；
 2. 当`Channel` 的状态是`kAdded` 且 `events_` 成员的值不为`kNoneEvent` 时，调用`update(EPOLL_CTL_MOD, channel)` ：`kAdded` 表示该文件上我们感兴趣的事件类型已经被加入到`epoll instance` 中，`events_` 成员的值不为`kNoneEvent` ，表示我们感兴趣的事件类型可能有变化(比如从关注文件的可写事件变到关注文件的可读事件)，因此通过`EPOLL_CTL_MOD` 操作进行修改；
-3. 当`Channel` 的状态是`kAdded` 且 `events_` 成员的值不为`kNoneEvent` 时，调用`update(EPOLL_CTL_MOD, channel)` 和 `set_index(kDeleted)` ：`kAdded` 表示该文件上我们感兴趣的事件类型已经被加入到`epoll instance` 中，`events_` 成员的值等于`kNoneEvent` ，表示我们对该文件上发生的任何事件都不感兴趣，因此通过`EPOLL_CTL_DEL` 操作将其从`epoll instance` 中删除，并将`Channel` 的状态设置为`kDeleted`。
+3. 当`Channel` 的状态是`kAdded` 且 `events_` 成员的值为`kNoneEvent` 时，调用`update(EPOLL_CTL_MOD, channel)` 和 `set_index(kDeleted)` ：`kAdded` 表示该文件上我们感兴趣的事件类型已经被加入到`epoll instance` 中，`events_` 成员的值等于`kNoneEvent` ，表示我们对该文件上发生的任何事件都不感兴趣，因此通过`EPOLL_CTL_DEL` 操作将其从`epoll instance` 中删除，并将`Channel` 的状态设置为`kDeleted`。
 
 我们接着来看看`removeChannel` 接口的实现：
 
@@ -506,7 +524,7 @@ callingExpiredTimers_(false)
 1. 如果内核`Timer` 已经超时，那么调用`int read(int fd, void* buf, size_t count)` 时，`buf` 中会存储八个字节，解释成`uint64_t`时即代表内核`Timer` 超时的次数；
 2. 如果内核`Timer` 未超时，那么调用`int read(int fd, void* buf, size_t count)` 时，如果文件描述符不是`NONBLOCKING`的，则该调用阻塞到内核`Timer` 下次超时为止；如果文件描述符是`NONBLOCKING`的，则该调用立即返回，且`errno` 被设置为 `EAGAIN`。
 
-此外，`timerfd_create` 返回文件描述符的另一个重要原因是，该文件描述符可以被`EPollPoller` 所监听；当内核`Timer` 超时时，`EPollPoller` 可以监听到文件描述符上的`kReadEvent` 事件，用户程序通过处理事件执行自定义的处理逻辑。
+此外，`timerfd_create` 返回文件描述符的另一个重要原因是，该文件描述符可以被`Poller` 所监听；当内核`Timer` 超时时，`Poller` 可以监听到文件描述符上的`kReadEvent` 事件，用户程序通过处理该事件执行自定义的处理逻辑。
 
 在了解完`timerfd` 相关的系统调用之后，我们可以回答上一节留下的问题了：`timerfd_` 指向的是内核`Timer` 对象，`timerfdChannel_` 是`timerfd_` 和一系列事件参数的封装；我们主要关注的是`timerfd_` 上的`kReadEvent` 事件，该事件意味着内核`Timer` 已经超时，用户程序可以通过处理事件执行后续的逻辑。
 
@@ -638,30 +656,186 @@ void TimerQueue::reset(const std::vector<Entry>& expired, Timestamp now) {
 
 至此，我们介绍完了`EventLoop` 的关键成员`Channel`，`Poller`和`TimerQueue` 实现细节，接下来我们可以将目光放回到`EventLoop` 的实现上了。
 
-### 事件通知与处理
+## loop 接口
 
-muduo 默认使用`epoll`系列系统调用来请求操作系统监测文件上所发生的事件，具体使用的系统调用在`muduo/net/poller/DefaultPoller.cpp` 文件中确定：
-
-```cpp
-Poller *Poller::newDefaultPoller(EventLoop *loop) {  
-  if (::getenv("MUDUO_USE_POLL")) {  
-    return new PollPoller(loop);  
-  } else {  
-    return new EPollPoller(loop);  
-  }  
-}
-```
-
-当 `epoll_wait` 系统调用返回时，操作系统将用户关注的文件上所发生的事件返回给用户程序：
+`EventLoop` 最常用的用户接口是`loop`，它是一个`while` 循环，不断轮询`Channel` ，处理文件上发生的I/O事件，执行用户传入的回调函数。它的实现如下：
 
 ```cpp
-// muduo/net/poller/EPollPoller.cc
-
-Timestamp EPollPoller::poll(...) {
+// muduo/net/EventLoop.cc
+void EventLoop::loop() {
 	...
-	int numEvents = ::epoll_wait(epollfd_, &*events_.begin(), events_.size(), timeoutMs);
-	
+	while (!quit_) {
+		activeChannels_.clear();
+		pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
+		...
+		for (Channel* channel : activeChannels_) {
+			currentActiveChannel_ = channel;
+			currentActiveChannel_->handleEvent(pollReturnTime_);
+		}
+		...
+		doPendingFunctors();
+	}
 }
 ```
 
-其中`numEvents` 表示事件发生的个数，`events` 链表记录了所有发生事件的详细信息。
+可以看到，循环首先调用`poller` 的`poll` 接口监控文件上所发生的事件，`activeChannels_` 成员记录了此次polling中监控到的所有事件。如果`activeChannels_` 不为空，那么调用`Channel` 的`handleEvent` 接口，根据事件类型调用不同的回调函数。
+
+在处理完文件上发生的事件后，循环调用`doPendingFunctors` 函数执行`pending` 在本循环上的回调函数，我们将在介绍`EventLoop` 的`run` 系列接口时再介绍该函数的实现。
+
+## run/queueInLoop 系列接口
+
+除了响应文件上发生的事件以外，`EventLoop` 还可以执行用户程序指定的函数。`runInLoop` 和 `queueInLoop` 是`EventLoop` 向外暴露的接口，主要被用于接收用户的回调函数，具体实现如下：
+
+```cpp
+// muduo/net/EventLoop.cc
+void EventLoop::runInLoop(Functor cb) {
+	if (isInLoopThread()) {
+		cb();
+	} else {
+		queueInLoop(std::move(cb));
+	}
+}
+
+void EventLoop::queueInLoop(Functor cb) {
+	{
+		MutexLockGuard lock(mutex_);
+		pendingFunctors_.push_back(std::move(cb));
+	}
+	if (!isInLoopThread() || callingPendingFunctors_) {
+		wakeup();
+	}
+}
+```
+
+可以看到，如果调用`runInLoop` 的线程是持有本`EventLoop` 的线程，那么直接调用传入的回调函数；否则调用`queueInLoop` 函数，将该回调函数放到`EventLoop` 的等待队列`pendingFunctors_`中。上一节中提到的`doPendingFunctors` 函数负责执行队列中排队的回调函数，具体实现如下：
+
+```cpp
+// muduo/net/EventLoop.cc
+void doPendingFunctors() {
+	std::vector<Functor> functors;
+	callingPendingFunctors_ = true;
+	{
+	MutexLockGuard lock(mutex_);
+	functors.swap(pendingFunctors_);
+	}
+	
+	for (const Functor& functor : functors) {
+		functor();
+	}
+	...
+}
+```
+
+为了减少临界区代码的长度，降低同步冲突的概率，`doPendingFunctors` 使用栈上的临时变量`functors` 与成员`pendingFunctors_` 进行数据交换，接收原等待队列中的函数并执行。
+
+## 线程间通知
+
+由于`doingPendingFunctors` 函数的调用在`loop` 循环中，因此有可能出现等待队列中有回调函数在等待但是`loop` 循环阻塞在`Poller::poll` 函数上的情况，从而导致回调函数不能被及时执行。因此，muduo 提供了基于`eventfd` 的通知机制。具体的实现如下：
+
+```cpp
+// muduo/net/EventLoop.h
+class EventLoop {
+	...
+private:
+	...
+	int wakeupfd_;
+	std::unique_ptr<Channel> wakeupChannel_;
+};
+
+// muduo/net/EventLoop.cpp
+EventLoop::EventLoop(...) : ..., wakeupfd_(::eventfd()), wakeupChannel_(new Channel(wakeupfd_, this)), ... {
+	wakeupChannel_->setReadCallback(std::bind(&EventLoop::handleRead, this));
+	wakeupChannel_->enableReading();
+}
+
+void EventLoop::wakeup() {
+	uint64_t one = 1;
+	ssize_t n = write(wakeupfd, &one, sizeof(one));
+	...
+}
+
+void EventLoop::handleRead() {
+	uint64_t one;
+	ssize_t n = read(wakeupfd_, &one, sizeof(one));
+	...
+}
+```
+
+`eventfd()` 系统调用会创建一个内核通知对象，并返回一个指向该对象的文件描述符。`EventLoop` 将该文件描述符赋值给`wakeupfd_` 成员，为该对象创建一个对应的`Channel`，并为其设置`kReadEvent` 事件的回调函数。
+
+选用`eventfd` 作为通知机制的原因是它能够很好地与多路复用机制集成，当通知发生时，`Poller` 可以监听到文件描述符上的`kReadEvent` 事件，`EventLoop` 从阻塞中恢复过来后，调用`doPendingFunctors` 执行等待队列中的函数。
+
+## runAfter/runAt/runEvery 接口
+
+除了执行特定的函数以外，`EventLoop` 还可以在特定时刻执行特定函数，用户程序可以通过`runAfter/runAt/runEvery` 接口设置，接口的实现如下：
+
+```cpp
+// muduo/net/EventLoop.cc
+
+TimerId EventLoop::runAt(Timestamp time, TimerCallback cb) {
+	return timerQueue_->addTimer(std::move(cb), time, 0.0);
+}
+
+TimerId EventLoop::runAfter(double delay, TimerCallback cb) {
+	Timestamp time(addTime(Timestamp::now(), interval));
+	return runAt(time, std::move(cb));
+}
+
+TimerId EventLoop::runEvery(double interval, TimerCallback cb) {
+	Timestamp time(addTime(Timestamp::now(), interval));
+	return timerQueue_->addTimer(std::move(cb), time, interval);
+}
+```
+
+三个接口的共同操作是向`EventLoop` 中的`timerQueue_` 成员添加`Timer` 对象， 它们的区别在于会根据需求的不同为`Timer` 对象设置不同的过期事件和超时周期。
+
+## quit 接口
+
+介绍完`EventLoop` 的常用接口实现后，我们最后来看看如何让一个`EventLoop` 退出循环，不再处理文件I/O事件与用户传入的回调函数。首先我们还是搭配着`loop` 接口一起来看`quit` 接口的实现：
+
+```cpp
+// muduo/net/EventLoop.h
+class EventLoop {
+public:
+	...
+private:
+	...
+	std::atomic<bool> quit_;
+};
+// muduo/net/EventLoop.cc
+void EventLoop::loop() {
+	...
+	while (!quit_) {
+		...
+	}
+}
+
+void EventLoop::quit() {
+	quit_ = true;
+	if (!isInLoopThread()) {
+		wakeup();
+	}
+}
+```
+
+可以发现，让`EventLoop` 退出循环的方式很简单，就是将其`quit_` 成员的值设置为`true`。由于`quit_` 成员是原子布尔类型，所以直接赋值也是线程安全的。当我们调用`quit`接口时，`EventLoop` 可能阻塞在`Poller::poll` 函数上，因此接口在设置完`quit_` 成员的值后调用`wakeup` 函数让`EventLoop` 从阻塞中恢复，尽快退出循环。
+
+# 总结
+
+本文对`EventLoop` 的关键数据成员与接口的实现进行了介绍，现对其进行总结：
+1. 一个`EventLoop`由一个`Poller`、一个`TimerQueue`和多个`Channel`组成；`Poller` 可以被认为是一个负责轮询I/O事件的数据结构，`TimerQueue` 可以被认为是一个处理`EventLoop`中定时事件的数据结构，`Channel` 可以被认为是一个封装好的数据结构，它主要被用来表示文件以及该文件上所发生的I/O事件。
+2. `Channel` 本质上就是一个文件描述符(`const int fd_`) 和一系列事件的封装。其中`events_` 表示在`fd_`上我们所感兴趣的事件类型，而`revents_`则是实际在`fd_`上所发生的事件类型。
+3. `Channel` 的定义还包含了一系列回调函数成员：`{read/write/close/error}Callback_`；通过为`Channel` 对象设置回调函数成员的值，我们可以在事件发生时让程序执行自定义的处理逻辑。
+4. `Channel` 向用户提供了一系列`enable/disable` 接口：其中`enable` 系列的接口表示用户希望操作系统能够通知该文件上所发生的特定类型事件；`disable` 系列的接口表示用户希望操作系统不再通知该文件上所发生的特定类型事件。
+5. 当成员`fd_` 上有事件发生时，`Channel` 需要进行处理；处理事件的核心逻辑实现在`handleEventWithGuard` 函数中，在与特定的标志位相与后，`Channel` 会调用由用户程序设置的回调函数，执行特定的事件处理逻辑。
+6. `Poller` 是muduo 对`Poll/Epoll` 系统调用的一个通用封装，向外部提供一个轮询的接口，主要被`EventLoop` 用来监听文件上的I/O事件。
+7. 对于事件这个概念，`epoll` 系统调用操作的是`struct epoll_event` 类型的对象，而muduo中操作的是`Channel` 类型的对象，因此，`Poller` 为用户提供了`updateChannel` 和 `removeChannel` 接口来完成两种类型的转换操作。
+8. `Timer` 的中文翻译是定时器，在muduo中，它的功能是：当到达了它的过期时间时，用户程序会收到通知，并执行相关操作。
+9. muduo除了为`Timer` 赋予单次计时的功能以外，还提供了周期计时的功能，`repeat_` 成员表示该`Timer` 是否启用周期计时功能，`interval_` 成员表示计时周期的具体时长，单位为毫秒。
+10. `timerfd_create` 返回文件描述符的另一个重要原因是，该文件描述符可以被`Poller` 所监听；当内核`Timer` 超时时，`Poller` 可以监听到文件描述符上的`kReadEvent` 事件，用户程序通过处理该事件执行自定义的处理逻辑。
+11. `TimerQueue` 向用户提供了`addTimer` 和 `cancel` 两个接口，用于向其中添加和取消`Timer` 对象。
+12. 在向`TimerQueue` 插入`Timer` 时，它会去检查并设置内核`Timer` 的超时时间；因此，当`Timer` 对象超时时，内核`Timer` 对应的`timerfd_` 一定是可读的。
+13. `EventLoop` 最常用的用户接口是`loop`，它是一个`while` 循环，不断轮询`Channel` ，处理文件上发生的I/O事件，执行用户传入的回调函数。
+14. muduo 提供了基于`eventfd` 的通知机制，`eventfd()` 系统调用会创建一个内核通知对象，并返回一个指向该对象的文件描述符。`EventLoop` 将该文件描述符赋值给`wakeupfd_` 成员，为该对象创建一个对应的`Channel`，并为其设置`kReadEvent` 事件的回调函数。
+15. 除了执行特定的函数以外，`EventLoop` 还可以在特定时刻执行特定函数，三个接口的共同操作是向`EventLoop` 中的`timerQueue_` 成员添加`Timer` 对象， 它们的区别在于会根据需求的不同为`Timer` 对象设置不同的过期事件和超时周期。
+16. 让`EventLoop` 退出循环的方式很简单，就是将其`quit_` 成员的值设置为`true`。由于`quit_` 成员是原子布尔类型，所以直接赋值也是线程安全的。
