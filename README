@@ -18,3 +18,9 @@ Tested on:
 Install required packages:
   # Ubuntu
   sudo apt install g++ cmake make libboost-dev libc-ares-dev libcurl4-openssl-dev libgoogle-perftools-dev libprotobuf-dev
+
+Currently working on: 
+  Muduo: https://github.com/chenshuo/muduo
+
+Code analysis blogs:
+  1. Muduo EventLoop: https://zhuanlan.zhihu.com/p/658360822
