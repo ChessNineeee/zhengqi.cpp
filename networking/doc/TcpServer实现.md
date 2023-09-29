@@ -122,7 +122,7 @@ TcpConnection --> Buffer;
 
 为了更好地理解`TcpConnection` 相关接口的实现，我们首先先来看看`Socket` 和 `Buffer` 的实现。
 
-## Socket 的系统调用调用
+## Socket 的系统调用接口
 
 由于`Socket`类型的数据成员只有内核套接字对象所对应的文件描述符，因此我们不再介绍`Socket` 类型的数据成员，直接来看接口。
 
@@ -163,3 +163,98 @@ public:
 ```
 
 `Socket` 类型对内核套接字使用最多的四个选项进行了封装，它们分别是：1. `TCP_NODELAY`，表示关闭Nagle算法；2. `SO_REUSEADDR`，表示可以重复绑定使用位于`TIME_WAIT` 的内核套接字；3. `SO_REUSEPORT`，表示多个内核套接字可以绑定到同一个`InetAddress` 上；4. `TCP_KEEPALIVE`，表示开启内核的TCP连接保活机制。
+
+## Buffer 关键数据成员
+
+介绍完`Socket` 类型的实现后，我们接着来看muduo是如何实现用户态缓冲区`Buffer` 的。我们首先来看它的定义：
+
+```cpp
+// muduo/net/Buffer.h
+class Buffer {
+public:
+	...
+	size_t prependableBytes() const { return readerIndex_; }
+	size_t readableBytes() const { return writerIndex_ - readerIndex_; }
+	size_t writableBytes() const { return buffer_.size() - writerIndex_;}
+private:
+	...
+	std::vector<char> buffer_;
+	size_t readIndex_;
+	size_t writerIndex_;
+};
+```
+
+成员`buffer_` 的类型是`vector<char>`，用于实际存储缓冲的数据。成员`readIndex_` 是一个指针，表示读者下一次从缓冲区中读取数据时的起始位置。成员`writerIndex_` 也是一个指针，表示写者下一次向缓冲区中写入数据时的起始位置。通过这两个指针，我们可以将缓冲区划分为三个区域：
+1. 可写入区域：`[start, readerIndex_)`，接口`prependableBytes()` 返回的就是该区域的大小。
+2. 可读区域：`[readerIndex_, writerIndex_)`，接口`readableBytes()` 返回的就是该区域的大小。
+3. 可写入区域：`[writerIndex_, end)`，接口`writableBytes()` 返回的就是该区域的大小。
+
+我们将在介绍`Buffer` 写入数据接口的时候再来介绍这两个可写入区域的区别。
+
+## 从Buffer 中读取数据的接口
+
+`Buffer` 一共为用户提供了三类读取数据的接口，分别是`retrieve/peek/read`，接下来我们来看它们的实现：
+
+```cpp
+// muduo/net/Buffer.h
+class Buffer {
+public:
+	void retrieve(size_t len) {
+		if (len < readableBytes()) {
+			readerIndex_ += len;
+		} else {
+			retrieveAll();
+		}
+	}
+
+	void retrieveIntXX() {
+		retrieve(sizeof(intXX_t));
+	}
+
+	intXX_t peekIntXX() const {
+		...
+		intXX_t beXX = 0;
+		::memcpy(&beXX, begin() + readerIndex_, sizeof beXX);
+		return networkToHostXX(beXX);
+	}
+
+	intXX_t readIntXX() const {
+		intXX_t result = peekIntXX();
+		retrieveXX();
+		return result;
+	}
+	...
+};
+```
+
+从接口的实现中我们可以发现，`retrieveIntXX` 接口所执行的操作是移动读者指针，即`readerIndex_` 成员，比如当我们调用`retrieveInt64()`时，实际上是将读者指针向后移动了八个字节。
+
+`peekIntXX` 接口所执行的操作是从可读区域中拷贝数据并返回，比如当我们调用`peekInt64()`时，实际上是将可读区域中前八个字节拷贝到变量中并返回。
+
+`readIntXX` 接口是`peekIntXX` 和 `retrieveIntXX` 接口的组合，它先调用`peekIntXX` 接口从缓冲区中拷贝数据，后调用`retrieveIntXX` 接口移动读者指针。
+
+## 向Buffer 中写入数据的接口
+
+`Buffer` 一共为用户提供了两类写入数据的接口，分别是`prepend/append`，接下来我们来看它们的实现：
+
+```cpp
+// muduo/net/Buffer.h
+
+void append(const char* data, size_t len) {
+	...
+	std::copy(data, data + len, start() + writerIndex_);
+	...
+	writerIndex_ += len;
+}
+
+void prepend(const char* data, size_t len) { 
+	...
+	readerIndex_ -= len;
+	std::copy(data, data + len, begin() + readerIndex_);
+}
+```
+
+从接口的实现中我们可以发现，`append` 接口所执行的操作是先将数据拷贝到缓冲区中，再向右移动写者指针，即将数据拷贝到`[writerIndex_, writerIndex + len)` 这段区域中。而`prepend` 接口所执行的操作是先向左移动读者指针，再将数据拷贝到缓冲区中，即将数据拷贝到`[readerIndex_ - len, readerIndex_)` 这段区域中。
+
+## Buffer 空间管理
+
