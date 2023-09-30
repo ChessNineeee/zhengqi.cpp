@@ -17,7 +17,7 @@ private:
 	const std::string ipPort_;
 	const std::string name_;
 	std::unique_ptr<Acceptor> acceptor_;
-	std::map<std::string, std::unique_ptr<TcpConnection>> connections_;
+	std::map<std::string, std::shared_ptr<TcpConnection>> connections_;
 	...
 };
 ```
@@ -50,7 +50,7 @@ graph BT;
 
 ```cpp
 // muduo/net/TcpConnection.h
-class TcpConnection {
+class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnection> {
 public:
 	...
 private:
@@ -70,7 +70,7 @@ private:
 
 muduo使用枚举类型来表示TCP连接的所有状态，一共有四个值：1. `kDisconnected` 表示TCP连接未建立；2. `kConnecting` 表示TCP连接正在建立中；3. `kConnected` 表示TCP连接已经建立；4. `kDisconnecting` 表示TCP连接正在被断开。成员`state_`表示本TCP连接正处于的状态。
 
-我们知道，从服务器的角度出发，一条TCP连接对应了内核套接字对象，每个内核套接字在用户态都对应了一个文件描述符。成员`socket_` 表示本TCP连接所持有的套接字，它的类型是`Socket`，这是一种muduo封装的套接字类型，我们将在后面介绍该类型。成员`channel_` 表示本TCP连接对应的文件描述符以及其一系列文件的封装。
+我们知道，从服务器的角度出发，一条TCP连接对应了内核套接字对象，每个内核套接字在用户态都对应了一个文件描述符。成员`socket_` 表示本TCP连接所持有的套接字，它的类型是`Socket`，这是一种muduo封装的套接字类型，我们将在后面介绍该类型。成员`channel_` 表示本TCP连接对应的文件描述符以及其一系列事件的封装。
 
 ```mermaid
 graph LR;
@@ -130,7 +130,7 @@ TcpConnection --> Buffer;
 
 ```cpp
 // net/muduo/Socket.h
-class Socket {
+class Socket : noncopyable {
 public:
 	...
 	void bindAddress(const InetAddress &localAddr);
@@ -170,7 +170,7 @@ public:
 
 ```cpp
 // muduo/net/Buffer.h
-class Buffer {
+class Buffer : copyable {
 public:
 	...
 	size_t prependableBytes() const { return readerIndex_; }
@@ -239,22 +239,210 @@ public:
 
 ```cpp
 // muduo/net/Buffer.h
-
-void append(const char* data, size_t len) {
-	...
-	std::copy(data, data + len, start() + writerIndex_);
-	...
-	writerIndex_ += len;
-}
-
-void prepend(const char* data, size_t len) { 
-	...
-	readerIndex_ -= len;
-	std::copy(data, data + len, begin() + readerIndex_);
-}
+class Buffer {
+public:
+	void append(const char* data, size_t len) {
+		...
+		std::copy(data, data + len, start() + writerIndex_);
+		...
+		writerIndex_ += len;
+	}
+	
+	void prepend(const char* data, size_t len) { 
+		...
+		readerIndex_ -= len;
+		std::copy(data, data + len, begin() + readerIndex_);
+	}
+};
 ```
 
 从接口的实现中我们可以发现，`append` 接口所执行的操作是先将数据拷贝到缓冲区中，再向右移动写者指针，即将数据拷贝到`[writerIndex_, writerIndex + len)` 这段区域中。而`prepend` 接口所执行的操作是先向左移动读者指针，再将数据拷贝到缓冲区中，即将数据拷贝到`[readerIndex_ - len, readerIndex_)` 这段区域中。
 
 ## Buffer 空间管理
+
+前文提到，`Buffer` 中负责存储数据的是成员`buffer_`，它的类型是`std::vector<char>`，这说明它的存储空间不是一成不变的，而是随着数据量的大小动态变化的，因此，本节我们就来看看它的空间是如何变化的。
+
+```cpp
+// muduo/net/Buffer.h
+class Buffer {
+public:
+	void append(const char *data, size_t len) {
+		ensureWritableBytes(len);
+		...
+	}
+	
+	void ensureWritableBytes(size_t len) {
+		if (writableBytes() < len) {
+			makeSpace(len);
+		}
+		...
+	}
+};
+
+```
+
+回顾`append` 接口的实现，我们可以发现，在向缓冲区中添加数据之前，首先得保证缓冲区中有足够的空间；如果没有足够的空间，我们还需要对缓冲区进行调整以腾出空间。具体的空间调整操作由`makeSpace` 函数完成，它的实现如下：
+
+```cpp
+// muduo/net/Buffer.h
+class Buffer {
+private:
+	void makeSpace(size_t len) {
+		if (writableBytes() + prependableBytes() < len ...) {
+			buffer_.resize(writerIndex_ + len);
+		} else {
+			size_t readable = readableBytes();
+			std::copy(begin() + readerIndex_, begin() + writerIndex_, begin());
+			readerIndex_ = begin();
+			writerIndex_ = readerIndex_ + readable;
+		}
+	}	
+};
+```
+
+`makeSpace` 函数首先判断缓冲区内部的剩余空间是否可以容纳新插入的数据，避免内部空间碎片造成不必要的空间分配。当剩余空间充足时，它会将`[readerIndex_, writeIndex_)` 之间的数据移动到`start`处；当剩余空间确实不足时，会调用`vector` 的`resize` 方法，为成员`buffer_` 分配更多的内存空间。
+
+当我们认为缓冲区的空闲空间太大，占用过多内存空间时，我们也可以调用`shrink` 接口收缩缓冲区的空闲空间，具体实现如下：
+
+```cpp
+// muduo/net/Buffer.h
+
+class Buffer {
+public:
+	...
+	void shrink(size_t reserve) {
+		Buffer other;
+		other.ensureWritableBytes(readableBytes() + reserve);
+		other.append(toStringPiece());
+		swap(other);
+	}
+};
+```
+
+可以发现，参数`reserve` 就是我们想保留的空闲空间字节数，`shrink` 函数首先在栈上创建一个临时`Buffer` 对象，大小为未读取的数据大小加上想保留的空闲空间大小，并将当前缓冲区中所有未读取的数据拷贝到临时对象中，最后通过`swap` 函数与临时对象交换`vector` 结构。原先的缓冲区内存随着临时`Buffer` 对象的销毁而一起被回收。
+
+介绍完用户缓冲区`Buffer` 的实现后，我们将目光放回到`TcpConnection` 上，分析其关键接口的具体实现。
+
+## TcpConnection 读/写数据接口
+
+作为系统与外部通信的媒介，`TcpConnection` 最重要的功能便是从外界读取数据/向外界发送数据，因此本节我们将关注`TcpConnection` 的读/写数据接口。我们首先来看读取数据接口的实现：
+
+```cpp
+// muduo/net/TcpConnection.h
+class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnection> {
+public:
+	void startRead();
+private:
+	void startInLoop();
+	void handleRead(Timestamp receiveTime);
+	typedef std::function<void (const TcpConnectionPtr& Buffer*, Timestamp)> MessageCallback;
+	MessageCallback messageCallback_;
+};
+
+// muduo/net/TcpConnection.cc
+void TcpConnection::startRead() {
+	loop_->runInLoop(std::bind(&TcpConnection::startReadInLoop, this));
+}
+
+void TcpConnection::startReadInLoop() {
+	...
+	if (!reading_ || channel_->isReading()) {
+		channel_->enableReading();
+		reading_ = true;
+	}
+}
+
+void TcpConnection::handleRead(Timestamp receiveTime) {
+	...
+	int savedErrno = 0;
+	ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
+	if (n > 0) {
+		messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
+	} 
+	...
+}
+```
+
+`TcpConnection` 向外部提供了`startRead` 接口，接口内部调用了`channel_` 成员的`enableReading` 接口，表示希望操作系统在观察到该TCP连接对应的文件描述符上发生了可读事件时，能够通知用户程序。
+
+至于可读事件的处理，则实现在`TcpConnection` 内部的`handleRead` 函数中。函数首先通过文件描述符，从内核套接字中读取数据，并保存到连接的用户态缓冲区中。随后函数通过调用绑定的回调函数成员`messageCallback_`，执行后续的业务逻辑。`messageCallback_` 成员的类型是`std::function<void (const shared_ptr<TcpConnection>&, Buffer*, Timestamp)>`， 表示该回调函数接收一个指向缓冲区的指针参数`Buffer*`，函数通过该指针存储连接上收到的数据。参数`Timestamp` 表示数据何时被收到。
+
+我们再来看发送数据接口的实现：
+
+```cpp
+// muduo/net/TcpConnection.h
+class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnection> {
+public:
+	void send(const void* message, int len);
+	void send(const StringPiece& message);
+	void send(Buffer* message);
+private:
+	void sendInLoop(const void* message, size_t len);
+	void handleWrite();
+};
+```
+
+发送数据部分实现起来比读取数据部分逻辑要复杂一些，我们先从接口开始分析，`TcpConnection` 有三个发送数据的接口，分别是1. `send(const void* message, int len)`，该接口接收待发送数据的起始地址和待发送数据的长度作为参数；2. `send(const StringPiece& message)`，该接口接收一个类型为`StringArgs` 的对象作为参数，而实际上`StringArgs` 是数据起始地址和数据长度的封装，因此在这里不再介绍；3. `send(Buffer*)`，该接口接收一个`Buffer`类型的缓冲区作为参数，其中可读区域就是用户待发送的数据。这三个接口最终都会调用`sendInLoop(const void* data, size_t len)` 函数来在事件循环`EventLoop` 中发送数据。
+
+接下来我们来看看`sendInLoop(const void* data, size_t len)` 函数的实现：
+
+```cpp
+// muduo/net/TcpConnection.cc
+void TcpConnection::sendInLoop(const void* data, size_t len) {
+	...
+	ssize_t nwrote = 0;
+	size_t remaining = len;
+	...
+	if (!channel_->isWriting() && outputBuffer_.readableBytes() == 0) {
+		nwrote = sockets::write(channel_->fd(), data, len);
+		if (nwrote >= 0) {
+			remaining = len - nwrote;
+			if (remaining == 0 && writeCompleteCallback_) {
+				loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
+			}
+			...
+		}
+		...
+	}
+	...
+	if (remaining > 0) {
+		...
+		outputBuffer_.append(static_cast<const char*>(data) + nwrote, remaining);
+		if (!channel_->isWriting()) {
+			channel_->enableWriting();
+		}
+	}
+}
+```
+
+函数首先通过`channel_.isWriting()` 判断先前是否让操作系统通知该连接文件描述符上的可写事件，如果是，则说明程序上次调用接口时没有将待发送数据完全发送，所以才关注了该文件描述符上的可写事件。
+
+当用户程序没有关注文件描述符上的可写事件，且发送缓冲区中也没有数据时，函数可以直接调用`write`系统调用来发送数据。函数使用`remaining` 变量记录未发送的长度，如果`remaining == 0` ，那么本次`write` 系统调用已经发送完所有的数据；当用户程序绑定了`WriteCompleteCallback` 回调函数时，该回调函数将会在此处被执行。
+
+当`remaining > 0` 时，此次`write` 系统调用没有发送完所有待发送的数据，因此需要将剩余的部分保存到输出缓冲区`outputBuffer_` 中，等待下次`write` 系统调用时再写入；用户程序也不知道什么时候可以执行下次系统调用，因此设置`channel_->enableWriting()`，希望操作系统能在连接对应的文件描述符可写事件发生的时候通知用户程序。
+
+至于可写事件的处理，则实现在`TcpConnection` 内部的`handleWrite` 函数中，它的实现如下：
+
+```cpp
+// muduo/net/TcpConnection.cc
+void TcpConnection::handleWrite() {
+	if (channel_->isWriting()) {
+		ssize_t n = sockets::write(channel_->fd(), outputBuffer_.peek(), outputBuffer_readableBytes());
+		if (n > 0) {
+			outputBuffer_.retrieve(n);
+			if (outputBuffer_->readableBytes() == 0) {
+				channel_->disableWriting();
+				if (writeCompleteCallback_) {
+					loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));
+				}
+				...
+			}
+		}
+		...
+	}
+	...
+}
+```
+
+函数通过调用`write`系统调用尝试发送输出缓冲区中的所有数据，如果全部发送完毕，则设置`channel_->disableWriting()`，表示操作系统不同再通知用户程序该连接文件描述符上的可写事件了，因为已经没有数据需要发送；如果用户设置了连接上的`WriteCompleteCallback` 回调函数，该回调函数将会在此处被执行。
 
