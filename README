@@ -13,7 +13,7 @@ Requires:
   Boost (for boost::any only.)
 
 Tested on:
-  Ubuntu 20.04 and above
+  Ubuntu 18.04 and above
 
 Install required packages:
   # Ubuntu
