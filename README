@@ -17,7 +17,7 @@ Tested on:
 
 Install required packages:
   # Ubuntu
-  sudo apt install g++ cmake make libboost-dev libc-ares-dev libcurl4-openssl-dev libgoogle-perftools-dev libprotobuf-dev
+  sudo apt install g++ cmake make libboost-dev libc-ares-dev libcurl4-openssl-dev libgoogle-perftools-dev libprotobuf-dev libboost-chrono-dev libboost-atomic-dev
 
 Currently working on: 
   Muduo: https://github.com/chenshuo/muduo

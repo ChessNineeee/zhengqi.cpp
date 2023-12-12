@@ -6,10 +6,12 @@
 #include "utility/Logging.h"
 #include "utility/ThreadLocal.h"
 #include <boost/any.hpp>
+#include <boost/thread/concurrent_queues/sync_bounded_queue.hpp>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <memory>
 
 using namespace zhengqi::utility;
 using namespace zhengqi::networking;
@@ -71,6 +73,16 @@ int main(int argc, char *argv[]) {
         return 1;
       }
     }
+
+    boost::concurrent::sync_bounded_queue<std::unique_ptr<int>> chan(1);
+    chan.push(std::make_unique<int>(1));
+
+    {
+      std::unique_ptr<int> owner = chan.pull();
+      // ....
+      chan.push(std::move(owner));
+    }
+
     uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
     InetAddress listenAddr(port);
     EventLoop loop;

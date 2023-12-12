@@ -1,5 +1,6 @@
 add_executable(balancer balancer.cpp)
-target_link_libraries(balancer zhengqi_networking)
+target_include_directories(balancer PRIVATE ${BOOST_LATEST_INCLUDE_DIR})
+target_link_libraries(balancer zhengqi_networking Boost::system Boost::thread Boost::chrono Boost::atomic)
 
 #add_executable(tcprelay tcprelay.cpp)
 #target_link_libraries(tcprelay zhengqi_networking)
