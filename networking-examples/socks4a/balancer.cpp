@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <vector>
 #include <memory>
+#include <fmt/core.h>
 
 using namespace zhengqi::utility;
 using namespace zhengqi::networking;
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
       chan.push(std::move(owner));
     }
 
+    fmt::println("hello fmt world");
     uint16_t port = static_cast<uint16_t>(atoi(argv[1]));
     InetAddress listenAddr(port);
     EventLoop loop;
