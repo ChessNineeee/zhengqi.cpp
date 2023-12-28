@@ -1,4 +1,5 @@
 add_subdirectory(socks4a)
+add_subdirectory(socks5)
 
 if(CARES_INCLUDE_DIR AND CARES_LIBRARY)
   add_subdirectory(cdns)

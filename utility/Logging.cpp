@@ -30,7 +30,7 @@ Logger::LogLevel initLogLevel() {
   else if (::getenv("ZHENGQI_LOG_DEBUG"))
     return Logger::DEBUG;
   else
-    return Logger::INFO;
+    return Logger::WARN;
 }
 
 Logger::LogLevel g_logLevel = initLogLevel();

@@ -1,0 +1,4 @@
+add_executable(socks5_proxy socks5_proxy.cpp)
+target_link_libraries(socks5_proxy zhengqi_networking)
+add_executable(socks5_proxy_multithreaded socks5_proxy_multithreaded.cpp)
+target_link_libraries(socks5_proxy_multithreaded zhengqi_networking)
