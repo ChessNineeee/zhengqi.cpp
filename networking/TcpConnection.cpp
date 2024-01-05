@@ -7,6 +7,7 @@
 #include "utility/Logging.h"
 #include "utility/WeakCallback.h"
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <sys/types.h>
 
@@ -89,7 +90,7 @@ void TcpConnection::send(Buffer *message) {
 }
 
 void TcpConnection::sendInLoop(const StringPiece &message) {
-  sendInLoop(message.data(), message.size());
+  sendInLoop(message.data(), static_cast<size_t>(message.size()));
 }
 
 void TcpConnection::sendInLoop(const void *data, size_t len) {
@@ -104,7 +105,7 @@ void TcpConnection::sendInLoop(const void *data, size_t len) {
   if (!channel_->isWriting() && outputBuffer_.readableBytes() == 0) {
     nwrote = sockets::write(channel_->fd(), data, len);
     if (nwrote >= 0) {
-      remaining = len - nwrote;
+      remaining = len - static_cast<size_t>(nwrote);
       if (remaining == 0 && writeCompleteCallback_) {
         loop_->queueInLoop(
             std::bind(writeCompleteCallback_, shared_from_this()));
@@ -241,6 +242,12 @@ void TcpConnection::handleRead(Timestamp receiveTime) {
 
   ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
   if (n > 0) {
+    bytesReceivedCounter_.Add(static_cast<int>(n));
+    LOG_DEBUG << bytesReceivedCounter_.MinuteCount()
+              << "bytes received over the past minute";
+    LOG_DEBUG << bytesReceivedCounter_.HourCount()
+              << "bytes received over the past hour";
+
     messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
   } else if (n == 0) {
     handleClose();
@@ -257,7 +264,7 @@ void TcpConnection::handleWrite() {
     ssize_t n = sockets::write(channel_->fd(), outputBuffer_.peek(),
                                outputBuffer_.readableBytes());
     if (n > 0) {
-      outputBuffer_.retrieve(n);
+      outputBuffer_.retrieve(static_cast<size_t>(n));
       if (outputBuffer_.readableBytes() == 0) {
         channel_->disableWriting();
         if (writeCompleteCallback_) {

@@ -4,6 +4,7 @@
 #include "networking/Buffer.h"
 #include "networking/Callbacks.h"
 #include "networking/InetAddress.h"
+#include "utility/MinuteHourCounter.h"
 #include "utility/StringPiece.h"
 #include "utility/Types.h"
 #include "utility/noncopyable.h"
@@ -113,6 +114,7 @@ private:
   size_t highWaterMark_;
   Buffer inputBuffer_;
   Buffer outputBuffer_;
+  MinuteHourCounter bytesReceivedCounter_;
   boost::any context_;
 };
 } // namespace networking
