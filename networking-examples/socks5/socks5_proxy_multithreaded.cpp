@@ -3,10 +3,8 @@
 #include "networking/Endian.h"
 #include "networking/EventLoop.h"
 #include "networking/TcpServer.h"
-#include "utility/CurrentThread.h"
 #include "utility/ThreadLocal.h"
 #include "utility/Types.h"
-#include <algorithm>
 #include <boost/any.hpp>
 #include <fmt/core.h>
 #include <iostream>
@@ -15,7 +13,6 @@
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
-#include <unordered_set>
 
 #define DOMAIN_SIZE_LIMIT 512
 #define IP_ADDR_SIZE 4
@@ -218,7 +215,7 @@ int main() {
 
   server.setConnectionCallback(onServerConnection);
   server.setMessageCallback(onServerMessage);
-  server.setThreadNum(6);
+  server.setThreadNum(8);
   server.start();
 
   loop.loop();
