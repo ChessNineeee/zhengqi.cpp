@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sstream>
-
 namespace zhengqi {
 namespace utility {
 
@@ -30,7 +28,7 @@ Logger::LogLevel initLogLevel() {
   else if (::getenv("ZHENGQI_LOG_DEBUG"))
     return Logger::DEBUG;
   else
-    return Logger::WARN;
+    return Logger::INFO;
 }
 
 Logger::LogLevel g_logLevel = initLogLevel();
